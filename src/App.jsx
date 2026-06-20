@@ -60,11 +60,23 @@ export default function App() {
   const [userInfo, setUserInfo] = useState(null);
   const [towers,   setTowers]   = useState([]);
 
-  const mapRef         = useRef(null);
-  const mapInstanceRef = useRef(null);
-  const towersLayerRef = useRef(null);
+  // ── وضع إدخال الموقع ─────────────────────────────────────────────────────
+  const [inputMode,    setInputMode]    = useState(null); // null | 'gps' | 'manual'
+  const [manualGov,    setManualGov]    = useState("");
+  const [manualCity,   setManualCity]   = useState("");
+  const [searching,    setSearching]    = useState(false);
+  const [pickerCenter, setPickerCenter] = useState(null); // { lat, lon }
+  const [pickedCoords, setPickedCoords] = useState(null); // { lat, lon }
 
-  // ── تهيئة الخريطة لما يتحدد الموقع ──────────────────────────────────────
+  const mapRef          = useRef(null);
+  const mapInstanceRef  = useRef(null);
+  const towersLayerRef  = useRef(null);
+
+  const pickerMapRef         = useRef(null);
+  const pickerMapInstanceRef = useRef(null);
+  const pickerMarkerRef      = useRef(null);
+
+  // ── خريطة النتائج (بعد التأكيد) ──────────────────────────────────────────
   useEffect(() => {
     if (!userInfo || !mapRef.current || !window.L) return;
 
@@ -73,9 +85,7 @@ export default function App() {
       mapInstanceRef.current = null;
     }
 
-    const map = window.L.map(mapRef.current).setView(
-      [userInfo.latitude, userInfo.longitude], 13
-    );
+    const map = window.L.map(mapRef.current).setView([userInfo.latitude, userInfo.longitude], 13);
 
     window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors",
@@ -90,14 +100,13 @@ export default function App() {
 
     window.L.marker([userInfo.latitude, userInfo.longitude], { icon: userIcon })
       .addTo(map)
-      .bindPopup("<b>موقعك الحالي</b>")
+      .bindPopup("<b>موقعك المحدد</b>")
       .openPopup();
 
     towersLayerRef.current = window.L.layerGroup().addTo(map);
     mapInstanceRef.current = map;
   }, [userInfo]);
 
-  // ── إضافة أبراج على الخريطة لما تيجي من الـ backend ─────────────────────
   useEffect(() => {
     if (!towers.length || !towersLayerRef.current || !window.L) return;
 
@@ -132,37 +141,56 @@ export default function App() {
     });
   }, [towers]);
 
-  // ── الدالة الرئيسية ───────────────────────────────────────────────────────
-  async function handleDetectAndReport() {
+  // ── خريطة الاختيار اليدوي ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!pickerCenter || !pickerMapRef.current || !window.L) return;
+
+    if (pickerMapInstanceRef.current) {
+      pickerMapInstanceRef.current.remove();
+      pickerMapInstanceRef.current = null;
+    }
+
+    const map = window.L.map(pickerMapRef.current).setView([pickerCenter.lat, pickerCenter.lon], 13);
+
+    window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
+
+    const markerIcon = window.L.divIcon({
+      html     : `<div style="font-size:30px;line-height:1;">📍</div>`,
+      className: "",
+      iconSize : [32, 32],
+      iconAnchor: [16, 32],
+    });
+
+    const marker = window.L.marker([pickerCenter.lat, pickerCenter.lon], {
+      icon: markerIcon,
+      draggable: true,
+    }).addTo(map);
+
+    marker.on("dragend", () => {
+      const pos = marker.getLatLng();
+      setPickedCoords({ lat: pos.lat, lon: pos.lng });
+    });
+
+    map.on("click", (e) => {
+      marker.setLatLng(e.latlng);
+      setPickedCoords({ lat: e.latlng.lat, lon: e.latlng.lng });
+    });
+
+    pickerMarkerRef.current      = marker;
+    pickerMapInstanceRef.current = map;
+    setPickedCoords({ lat: pickerCenter.lat, lon: pickerCenter.lon });
+  }, [pickerCenter]);
+
+  // ── جلب التقرير من الباك إند (مشترك بين GPS واليدوي) ─────────────────────
+  async function fetchReport(latitude, longitude, governorate) {
     setLoading(true);
     setError(null);
     setResult(null);
-    setUserInfo(null);
     setTowers([]);
 
     try {
-      if (!navigator.geolocation) throw new Error("متصفحك لا يدعم خاصية GPS");
-
-      const position = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout           : 10000,
-          maximumAge        : 0,
-        });
-      });
-
-      const latitude  = position.coords.latitude;
-      const longitude = position.coords.longitude;
-
-      const geoRes  = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
-      );
-      const geoData = await geoRes.json();
-      const governorate =
-        geoData.address?.state  ||
-        geoData.address?.county ||
-        geoData.address?.city   || "";
-
       setUserInfo({ latitude, longitude, governorate });
 
       const [backendRes, towersRes] = await Promise.all([
@@ -190,13 +218,97 @@ export default function App() {
       setTowers(towersData.towers || []);
 
     } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── تدفق GPS ──────────────────────────────────────────────────────────────
+  async function handleGpsFlow() {
+    setInputMode("gps");
+    setError(null);
+    setLoading(true);
+
+    try {
+      if (!navigator.geolocation) throw new Error("متصفحك لا يدعم خاصية GPS");
+
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout           : 10000,
+          maximumAge        : 0,
+        });
+      });
+
+      const latitude  = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      const geoRes  = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+      );
+      const geoData = await geoRes.json();
+      const governorate =
+        geoData.address?.state  ||
+        geoData.address?.county ||
+        geoData.address?.city   || "";
+
+      await fetchReport(latitude, longitude, governorate);
+
+    } catch (err) {
+      setLoading(false);
       if (err.code === 1)      setError("رفضت السماح بالوصول للموقع.");
       else if (err.code === 2) setError("تعذّر تحديد موقعك. تأكد من تفعيل GPS.");
       else if (err.code === 3) setError("انتهت مهلة تحديد الموقع. حاول مرة أخرى.");
       else                     setError(err.message);
-    } finally {
-      setLoading(false);
     }
+  }
+
+  // ── تدفق الإدخال اليدوي ──────────────────────────────────────────────────
+  function startManualFlow() {
+    setInputMode("manual");
+    setError(null);
+    setResult(null);
+    setUserInfo(null);
+    setTowers([]);
+    setPickerCenter(null);
+    setPickedCoords(null);
+  }
+
+  async function handleManualSearch() {
+    if (!manualGov.trim() || !manualCity.trim()) {
+      setError("من فضلك أدخل اسم المحافظة والمدينة");
+      return;
+    }
+
+    setSearching(true);
+    setError(null);
+
+    try {
+      const query = `${manualCity}, ${manualGov}, مصر`;
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`
+      );
+      const data = await res.json();
+
+      if (!data.length) {
+        setError("لم يتم العثور على هذا الموقع، حاول كتابة الاسم بشكل مختلف");
+        setSearching(false);
+        return;
+      }
+
+      setPickerCenter({ lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) });
+
+    } catch (err) {
+      setError("حدث خطأ أثناء البحث عن الموقع");
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  function handleConfirmManualLocation() {
+    if (!pickedCoords) return;
+    fetchReport(pickedCoords.lat, pickedCoords.lon, manualGov.trim());
   }
 
   const aiColor     = result?.ai_analysis?.is_overloaded ? "#ef4444" : "#22c55e";
@@ -256,39 +368,153 @@ export default function App() {
             مراقبة الشبكة في الوقت الفعلي
           </h2>
           <p style={{ color: "#94a3b8", marginBottom: "32px", lineHeight: 1.7 }}>
-            اضغط الزر أدناه للسماح بالوصول لموقعك عبر GPS<br />
-            والحصول على تقرير شامل عن أقرب برج اتصالات
+            اختر طريقة تحديد موقعك للحصول على تقرير شامل عن أقرب برج اتصالات
           </p>
 
-          <button
-            onClick={handleDetectAndReport}
-            disabled={loading}
-            style={{
-              background   : loading ? "#334155" : "linear-gradient(135deg, #0284c7, #38bdf8)",
-              color        : "#fff",
-              border       : "none",
-              borderRadius : "14px",
-              padding      : "16px 48px",
-              fontSize     : "1.05rem",
-              fontWeight   : 700,
-              cursor       : loading ? "not-allowed" : "pointer",
-              boxShadow    : loading ? "none" : "0 0 30px #38bdf844",
-              transition   : "all 0.3s",
-              display      : "inline-flex",
-              alignItems   : "center",
-              gap          : "10px",
-            }}
-          >
-            {loading ? (
-              <>
-                <span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span>
-                جارٍ التحليل...
-              </>
-            ) : (
-              <>📍 تحديد موقعي عبر GPS وإصدار التقرير</>
-            )}
-          </button>
+          <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
+            <button
+              onClick={handleGpsFlow}
+              disabled={loading}
+              style={{
+                background   : loading && inputMode === "gps" ? "#334155" : "linear-gradient(135deg, #0284c7, #38bdf8)",
+                color        : "#fff",
+                border       : "none",
+                borderRadius : "14px",
+                padding      : "16px 36px",
+                fontSize     : "1.02rem",
+                fontWeight   : 700,
+                cursor       : loading ? "not-allowed" : "pointer",
+                boxShadow    : "0 0 30px #38bdf844",
+                display      : "inline-flex",
+                alignItems   : "center",
+                gap          : "10px",
+              }}
+            >
+              {loading && inputMode === "gps" ? (
+                <>
+                  <span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span>
+                  جارٍ التحليل...
+                </>
+              ) : (
+                <>📍 تحديد عبر GPS</>
+              )}
+            </button>
+
+            <button
+              onClick={startManualFlow}
+              disabled={loading}
+              style={{
+                background   : "transparent",
+                color        : "#818cf8",
+                border       : "2px solid #818cf8",
+                borderRadius : "14px",
+                padding      : "14px 34px",
+                fontSize     : "1.02rem",
+                fontWeight   : 700,
+                cursor       : loading ? "not-allowed" : "pointer",
+                display      : "inline-flex",
+                alignItems   : "center",
+                gap          : "10px",
+              }}
+            >
+              ✍️ إدخال الموقع يدويًا
+            </button>
+          </div>
         </div>
+
+        {/* ── نموذج الإدخال اليدوي ──────────────────────────────────────── */}
+        {inputMode === "manual" && !userInfo && (
+          <div style={{
+            background  : "#1e293b",
+            border      : "1px solid #818cf844",
+            borderRadius: "16px",
+            padding     : "28px",
+            marginBottom: "28px",
+          }}>
+            <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginBottom: "18px" }}>
+              <input
+                type="text"
+                placeholder="اسم المحافظة (مثال: الغربية)"
+                value={manualGov}
+                onChange={(e) => setManualGov(e.target.value)}
+                style={{
+                  flex        : "1 1 220px",
+                  background  : "#0f172a",
+                  border      : "1px solid #334155",
+                  borderRadius: "10px",
+                  padding     : "12px 16px",
+                  color       : "#e2e8f0",
+                  fontSize    : "0.95rem",
+                  outline     : "none",
+                }}
+              />
+              <input
+                type="text"
+                placeholder="اسم المدينة (مثال: طنطا)"
+                value={manualCity}
+                onChange={(e) => setManualCity(e.target.value)}
+                style={{
+                  flex        : "1 1 220px",
+                  background  : "#0f172a",
+                  border      : "1px solid #334155",
+                  borderRadius: "10px",
+                  padding     : "12px 16px",
+                  color       : "#e2e8f0",
+                  fontSize    : "0.95rem",
+                  outline     : "none",
+                }}
+              />
+              <button
+                onClick={handleManualSearch}
+                disabled={searching}
+                style={{
+                  background  : "linear-gradient(135deg, #0284c7, #38bdf8)",
+                  color       : "#fff",
+                  border      : "none",
+                  borderRadius: "10px",
+                  padding     : "12px 28px",
+                  fontWeight  : 700,
+                  cursor      : searching ? "not-allowed" : "pointer",
+                }}
+              >
+                {searching ? "جارٍ البحث..." : "🔍 ابحث عن الموقع"}
+              </button>
+            </div>
+
+            {pickerCenter && (
+              <>
+                <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "12px" }}>
+                  📌 اضغط على الخريطة أو اسحب العلامة لتحديد موقعك بدقة
+                </p>
+                <div style={{
+                  borderRadius: "12px",
+                  overflow    : "hidden",
+                  border      : "1px solid #334155",
+                  marginBottom: "18px",
+                }}>
+                  <div ref={pickerMapRef} style={{ height: "380px", width: "100%" }} />
+                </div>
+                <button
+                  onClick={handleConfirmManualLocation}
+                  disabled={!pickedCoords || loading}
+                  style={{
+                    background  : loading ? "#334155" : "linear-gradient(135deg, #16a34a, #22c55e)",
+                    color       : "#fff",
+                    border      : "none",
+                    borderRadius: "12px",
+                    padding     : "14px 36px",
+                    fontWeight  : 700,
+                    fontSize    : "1rem",
+                    cursor      : loading ? "not-allowed" : "pointer",
+                    width       : "100%",
+                  }}
+                >
+                  {loading ? "جارٍ التحليل..." : "✅ تأكيد الموقع وإصدار التقرير"}
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         {/* ── User Info ──────────────────────────────────────────────────── */}
         {userInfo && (
@@ -303,11 +529,11 @@ export default function App() {
             gap         : "20px",
             alignItems  : "center",
           }}>
-            <span style={{ color: "#64748b", fontSize: "0.8rem" }}>📌 موقعك المُكتشف:</span>
+            <span style={{ color: "#64748b", fontSize: "0.8rem" }}>📌 الموقع المحدد:</span>
             {[
               { label: "خط العرض", value: userInfo.latitude?.toFixed(4) },
               { label: "خط الطول", value: userInfo.longitude?.toFixed(4) },
-              { label: "المحافظة", value: userInfo.governorate || "جارٍ التحديد..." },
+              { label: "المحافظة", value: userInfo.governorate || "—" },
             ].map(({ label, value }) => (
               <div key={label} style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                 <span style={{ color: "#64748b", fontSize: "0.78rem" }}>{label}:</span>
@@ -339,10 +565,7 @@ export default function App() {
                 🔴 خطورة عالية &nbsp; 🟡 خطورة متوسطة &nbsp; 🟢 مستقر &nbsp; 📍 موقعك
               </span>
             </div>
-            <div
-              ref={mapRef}
-              style={{ height: "420px", width: "100%" }}
-            />
+            <div ref={mapRef} style={{ height: "420px", width: "100%" }} />
           </div>
         )}
 
@@ -360,12 +583,7 @@ export default function App() {
             alignItems  : "center",
           }}>
             <span style={{ fontSize: "1.4rem" }}>⚠️</span>
-            <div>
-              <strong>حدث خطأ:</strong> {error}
-              <div style={{ color: "#94a3b8", fontSize: "0.8rem", marginTop: "4px" }}>
-                تأكد من السماح للمتصفح بالوصول لموقعك وأن GPS مفعّل.
-              </div>
-            </div>
+            <div><strong>حدث خطأ:</strong> {error}</div>
           </div>
         )}
 
