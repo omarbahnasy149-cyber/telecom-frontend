@@ -434,7 +434,7 @@ export default function App() {
             <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginBottom: "18px" }}>
               <input
                 type="text"
-                placeholder="اسم المحافظة (مثال: الغربية)"
+                placeholder=" : اسم المحافظة"
                 value={manualGov}
                 onChange={(e) => setManualGov(e.target.value)}
                 style={{
@@ -450,7 +450,7 @@ export default function App() {
               />
               <input
                 type="text"
-                placeholder="اسم المدينة (مثال: طنطا)"
+                placeholder=" : اسم المدينة"
                 value={manualCity}
                 onChange={(e) => setManualCity(e.target.value)}
                 style={{
