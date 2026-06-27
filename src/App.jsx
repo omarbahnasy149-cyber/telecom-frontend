@@ -60,70 +60,51 @@ export default function App() {
   const [userInfo, setUserInfo] = useState(null);
   const [towers,   setTowers]   = useState([]);
 
-  // ── وضع إدخال الموقع ─────────────────────────────────────────────────────
-  const [inputMode,    setInputMode]    = useState(null); // null | 'gps' | 'manual'
+  const [inputMode,    setInputMode]    = useState(null);
   const [manualGov,    setManualGov]    = useState("");
   const [manualCity,   setManualCity]   = useState("");
   const [searching,    setSearching]    = useState(false);
-  const [pickerCenter, setPickerCenter] = useState(null); // { lat, lon }
-  const [pickedCoords, setPickedCoords] = useState(null); // { lat, lon }
+  const [pickerCenter, setPickerCenter] = useState(null);
+  const [pickedCoords, setPickedCoords] = useState(null);
 
-  const mapRef          = useRef(null);
-  const mapInstanceRef  = useRef(null);
-  const towersLayerRef  = useRef(null);
-
+  const mapRef               = useRef(null);
+  const mapInstanceRef       = useRef(null);
+  const towersLayerRef       = useRef(null);
   const pickerMapRef         = useRef(null);
   const pickerMapInstanceRef = useRef(null);
   const pickerMarkerRef      = useRef(null);
 
-  // ── خريطة النتائج (بعد التأكيد) ──────────────────────────────────────────
   useEffect(() => {
     if (!userInfo || !mapRef.current || !window.L) return;
-
     if (mapInstanceRef.current) {
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
     }
-
     const map = window.L.map(mapRef.current).setView([userInfo.latitude, userInfo.longitude], 13);
-
     window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors",
     }).addTo(map);
-
     const userIcon = window.L.divIcon({
-      html     : `<div style="font-size:28px;line-height:1;">📍</div>`,
-      className: "",
-      iconSize : [30, 30],
-      iconAnchor: [15, 30],
+      html: `<div style="font-size:28px;line-height:1;">📍</div>`,
+      className: "", iconSize: [30, 30], iconAnchor: [15, 30],
     });
-
     window.L.marker([userInfo.latitude, userInfo.longitude], { icon: userIcon })
-      .addTo(map)
-      .bindPopup("<b>موقعك المحدد</b>")
-      .openPopup();
-
+      .addTo(map).bindPopup("<b>موقعك المحدد</b>").openPopup();
     towersLayerRef.current = window.L.layerGroup().addTo(map);
     mapInstanceRef.current = map;
   }, [userInfo]);
 
   useEffect(() => {
     if (!towers.length || !towersLayerRef.current || !window.L) return;
-
     towersLayerRef.current.clearLayers();
-
     towers.forEach((tower) => {
       const emoji =
         tower.risk_level === "High Risk"   ? "🔴" :
         tower.risk_level === "Medium Risk" ? "🟡" : "🟢";
-
       const icon = window.L.divIcon({
-        html     : `<div style="font-size:18px;line-height:1;">${emoji}</div>`,
-        className: "",
-        iconSize : [22, 22],
-        iconAnchor: [11, 11],
+        html: `<div style="font-size:18px;line-height:1;">${emoji}</div>`,
+        className: "", iconSize: [22, 22], iconAnchor: [11, 11],
       });
-
       window.L.marker([tower.lat, tower.lon], { icon })
         .addTo(towersLayerRef.current)
         .bindPopup(`
@@ -141,82 +122,63 @@ export default function App() {
     });
   }, [towers]);
 
-  // ── خريطة الاختيار اليدوي ────────────────────────────────────────────────
   useEffect(() => {
     if (!pickerCenter || !pickerMapRef.current || !window.L) return;
-
     if (pickerMapInstanceRef.current) {
       pickerMapInstanceRef.current.remove();
       pickerMapInstanceRef.current = null;
     }
-
     const map = window.L.map(pickerMapRef.current).setView([pickerCenter.lat, pickerCenter.lon], 13);
-
     window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors",
     }).addTo(map);
-
     const markerIcon = window.L.divIcon({
-      html     : `<div style="font-size:30px;line-height:1;">📍</div>`,
-      className: "",
-      iconSize : [32, 32],
-      iconAnchor: [16, 32],
+      html: `<div style="font-size:30px;line-height:1;">📍</div>`,
+      className: "", iconSize: [32, 32], iconAnchor: [16, 32],
     });
-
     const marker = window.L.marker([pickerCenter.lat, pickerCenter.lon], {
-      icon: markerIcon,
-      draggable: true,
+      icon: markerIcon, draggable: true,
     }).addTo(map);
-
     marker.on("dragend", () => {
       const pos = marker.getLatLng();
       setPickedCoords({ lat: pos.lat, lon: pos.lng });
     });
-
     map.on("click", (e) => {
       marker.setLatLng(e.latlng);
       setPickedCoords({ lat: e.latlng.lat, lon: e.latlng.lng });
     });
-
     pickerMarkerRef.current      = marker;
     pickerMapInstanceRef.current = map;
     setPickedCoords({ lat: pickerCenter.lat, lon: pickerCenter.lon });
   }, [pickerCenter]);
 
-  // ── جلب التقرير من الباك إند (مشترك بين GPS واليدوي) ─────────────────────
   async function fetchReport(latitude, longitude, governorate) {
     setLoading(true);
     setError(null);
     setResult(null);
     setTowers([]);
-
     try {
       setUserInfo({ latitude, longitude, governorate });
-
       const [backendRes, towersRes] = await Promise.all([
         fetch(BACKEND_URL, {
-          method : "POST",
+          method: "POST",
           headers: { "Content-Type": "application/json" },
-          body   : JSON.stringify({ latitude, longitude, governorate }),
+          body: JSON.stringify({ latitude, longitude, governorate }),
         }),
         fetch(TOWERS_URL, {
-          method : "POST",
+          method: "POST",
           headers: { "Content-Type": "application/json" },
-          body   : JSON.stringify({ latitude, longitude, n: 100 }),
+          body: JSON.stringify({ latitude, longitude, n: 100 }),
         }),
       ]);
-
       if (!backendRes.ok) {
         const errData = await backendRes.json().catch(() => ({}));
         throw new Error(errData.error || `خطأ من السيرفر: ${backendRes.status}`);
       }
-
       const data       = await backendRes.json();
       const towersData = await towersRes.json();
-
       setResult(data);
       setTowers(towersData.towers || []);
-
     } catch (err) {
       setError(err.message);
     } finally {
@@ -224,26 +186,19 @@ export default function App() {
     }
   }
 
-  // ── تدفق GPS ──────────────────────────────────────────────────────────────
   async function handleGpsFlow() {
     setInputMode("gps");
     setError(null);
     setLoading(true);
-
     try {
       if (!navigator.geolocation) throw new Error("متصفحك لا يدعم خاصية GPS");
-
       const position = await new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout           : 10000,
-          maximumAge        : 0,
+          enableHighAccuracy: true, timeout: 10000, maximumAge: 0,
         });
       });
-
       const latitude  = position.coords.latitude;
       const longitude = position.coords.longitude;
-
       const geoRes  = await fetch(
         `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
       );
@@ -252,9 +207,7 @@ export default function App() {
         geoData.address?.state  ||
         geoData.address?.county ||
         geoData.address?.city   || "";
-
       await fetchReport(latitude, longitude, governorate);
-
     } catch (err) {
       setLoading(false);
       if (err.code === 1)      setError("رفضت السماح بالوصول للموقع.");
@@ -264,7 +217,6 @@ export default function App() {
     }
   }
 
-  // ── تدفق الإدخال اليدوي ──────────────────────────────────────────────────
   function startManualFlow() {
     setInputMode("manual");
     setError(null);
@@ -280,25 +232,20 @@ export default function App() {
       setError("من فضلك أدخل اسم المحافظة والمدينة");
       return;
     }
-
     setSearching(true);
     setError(null);
-
     try {
       const query = `${manualCity}, ${manualGov}, مصر`;
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`
       );
       const data = await res.json();
-
       if (!data.length) {
         setError("لم يتم العثور على هذا الموقع، حاول كتابة الاسم بشكل مختلف");
         setSearching(false);
         return;
       }
-
       setPickerCenter({ lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) });
-
     } catch (err) {
       setError("حدث خطأ أثناء البحث عن الموقع");
     } finally {
@@ -311,8 +258,7 @@ export default function App() {
     fetchReport(pickedCoords.lat, pickedCoords.lon, manualGov.trim());
   }
 
-  const aiColor     = result?.ai_analysis?.is_overloaded ? "#ef4444" : "#22c55e";
-  const stressColor = result?.governorate?.under_stress  ? "#f59e0b" : "#22c55e";
+  const stressColor = result?.governorate?.under_stress ? "#f59e0b" : "#22c55e";
 
   return (
     <div style={{
@@ -323,7 +269,6 @@ export default function App() {
       direction : "rtl",
     }}>
 
-      {/* ── Header ─────────────────────────────────────────────────────── */}
       <header style={{
         background  : "#1e293b",
         borderBottom: "1px solid #334155",
@@ -353,7 +298,6 @@ export default function App() {
 
       <main style={{ maxWidth: "1100px", margin: "0 auto", padding: "40px 20px" }}>
 
-        {/* ── Hero ───────────────────────────────────────────────────────── */}
         <div style={{
           background  : "linear-gradient(135deg, #1e293b 0%, #0f2744 100%)",
           border      : "1px solid #38bdf833",
@@ -370,24 +314,23 @@ export default function App() {
           <p style={{ color: "#94a3b8", marginBottom: "32px", lineHeight: 1.7 }}>
             اختر طريقة تحديد موقعك للحصول على تقرير شامل عن أقرب برج اتصالات
           </p>
-
           <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
             <button
               onClick={handleGpsFlow}
               disabled={loading}
               style={{
-                background   : loading && inputMode === "gps" ? "#334155" : "linear-gradient(135deg, #0284c7, #38bdf8)",
-                color        : "#fff",
-                border       : "none",
-                borderRadius : "14px",
-                padding      : "16px 36px",
-                fontSize     : "1.02rem",
-                fontWeight   : 700,
-                cursor       : loading ? "not-allowed" : "pointer",
-                boxShadow    : "0 0 30px #38bdf844",
-                display      : "inline-flex",
-                alignItems   : "center",
-                gap          : "10px",
+                background  : loading && inputMode === "gps" ? "#334155" : "linear-gradient(135deg, #0284c7, #38bdf8)",
+                color       : "#fff",
+                border      : "none",
+                borderRadius: "14px",
+                padding     : "16px 36px",
+                fontSize    : "1.02rem",
+                fontWeight  : 700,
+                cursor      : loading ? "not-allowed" : "pointer",
+                boxShadow   : "0 0 30px #38bdf844",
+                display     : "inline-flex",
+                alignItems  : "center",
+                gap         : "10px",
               }}
             >
               {loading && inputMode === "gps" ? (
@@ -395,26 +338,24 @@ export default function App() {
                   <span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span>
                   جارٍ التحليل...
                 </>
-              ) : (
-                <>📍 تحديد عبر GPS</>
-              )}
+              ) : <>📍 تحديد عبر GPS</>}
             </button>
 
             <button
               onClick={startManualFlow}
               disabled={loading}
               style={{
-                background   : "transparent",
-                color        : "#818cf8",
-                border       : "2px solid #818cf8",
-                borderRadius : "14px",
-                padding      : "14px 34px",
-                fontSize     : "1.02rem",
-                fontWeight   : 700,
-                cursor       : loading ? "not-allowed" : "pointer",
-                display      : "inline-flex",
-                alignItems   : "center",
-                gap          : "10px",
+                background  : "transparent",
+                color       : "#818cf8",
+                border      : "2px solid #818cf8",
+                borderRadius: "14px",
+                padding     : "14px 34px",
+                fontSize    : "1.02rem",
+                fontWeight  : 700,
+                cursor      : loading ? "not-allowed" : "pointer",
+                display     : "inline-flex",
+                alignItems  : "center",
+                gap         : "10px",
               }}
             >
               ✍️ إدخال الموقع يدويًا
@@ -422,7 +363,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* ── نموذج الإدخال اليدوي ──────────────────────────────────────── */}
         {inputMode === "manual" && !userInfo && (
           <div style={{
             background  : "#1e293b",
@@ -434,47 +374,34 @@ export default function App() {
             <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginBottom: "18px" }}>
               <input
                 type="text"
-                placeholder=" اسم المحافظة"
+                placeholder="اسم المحافظة"
                 value={manualGov}
                 onChange={(e) => setManualGov(e.target.value)}
                 style={{
-                  flex        : "1 1 220px",
-                  background  : "#0f172a",
-                  border      : "1px solid #334155",
-                  borderRadius: "10px",
-                  padding     : "12px 16px",
-                  color       : "#e2e8f0",
-                  fontSize    : "0.95rem",
-                  outline     : "none",
+                  flex: "1 1 220px", background: "#0f172a", border: "1px solid #334155",
+                  borderRadius: "10px", padding: "12px 16px", color: "#e2e8f0",
+                  fontSize: "0.95rem", outline: "none",
                 }}
               />
               <input
                 type="text"
-                placeholder=" اسم المدينة"
+                placeholder="اسم المدينة"
                 value={manualCity}
                 onChange={(e) => setManualCity(e.target.value)}
                 style={{
-                  flex        : "1 1 220px",
-                  background  : "#0f172a",
-                  border      : "1px solid #334155",
-                  borderRadius: "10px",
-                  padding     : "12px 16px",
-                  color       : "#e2e8f0",
-                  fontSize    : "0.95rem",
-                  outline     : "none",
+                  flex: "1 1 220px", background: "#0f172a", border: "1px solid #334155",
+                  borderRadius: "10px", padding: "12px 16px", color: "#e2e8f0",
+                  fontSize: "0.95rem", outline: "none",
                 }}
               />
               <button
                 onClick={handleManualSearch}
                 disabled={searching}
                 style={{
-                  background  : "linear-gradient(135deg, #0284c7, #38bdf8)",
-                  color       : "#fff",
-                  border      : "none",
-                  borderRadius: "10px",
-                  padding     : "12px 28px",
-                  fontWeight  : 700,
-                  cursor      : searching ? "not-allowed" : "pointer",
+                  background: "linear-gradient(135deg, #0284c7, #38bdf8)",
+                  color: "#fff", border: "none", borderRadius: "10px",
+                  padding: "12px 28px", fontWeight: 700,
+                  cursor: searching ? "not-allowed" : "pointer",
                 }}
               >
                 {searching ? "جارٍ البحث..." : "🔍 ابحث عن الموقع"}
@@ -486,12 +413,7 @@ export default function App() {
                 <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "12px" }}>
                   📌 اضغط على الخريطة أو اسحب العلامة لتحديد موقعك بدقة
                 </p>
-                <div style={{
-                  borderRadius: "12px",
-                  overflow    : "hidden",
-                  border      : "1px solid #334155",
-                  marginBottom: "18px",
-                }}>
+                <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid #334155", marginBottom: "18px" }}>
                   <div ref={pickerMapRef} style={{ height: "380px", width: "100%" }} />
                 </div>
                 <button
@@ -516,7 +438,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ── User Info ──────────────────────────────────────────────────── */}
         {userInfo && (
           <div style={{
             background  : "#1e293b",
@@ -543,7 +464,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ── Map ────────────────────────────────────────────────────────── */}
         {userInfo && (
           <div style={{
             background  : "#1e293b",
@@ -553,11 +473,11 @@ export default function App() {
             marginBottom: "28px",
           }}>
             <div style={{
-              padding    : "14px 20px",
+              padding     : "14px 20px",
               borderBottom: "1px solid #334155",
-              display    : "flex",
-              alignItems : "center",
-              gap        : "10px",
+              display     : "flex",
+              alignItems  : "center",
+              gap         : "10px",
             }}>
               <span style={{ fontSize: "1.2rem" }}>🗺️</span>
               <span style={{ color: "#38bdf8", fontWeight: 700 }}>خريطة الأبراج التفاعلية</span>
@@ -569,7 +489,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ── Error ──────────────────────────────────────────────────────── */}
         {error && (
           <div style={{
             background  : "#450a0a",
@@ -587,15 +506,14 @@ export default function App() {
           </div>
         )}
 
-        {/* ── Results ────────────────────────────────────────────────────── */}
         {result && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "24px" }}>
 
             <Card title="التقييم العام للمحافظة" icon="🗺️" borderColor={stressColor}>
-              <DataRow label="المحافظة"          value={result.governorate.name}          valueColor="#38bdf8" />
-              <DataRow label="نطاق البحث"         value={result.governorate.search_scope} />
-              <DataRow label="حالة الشبكة"        value={result.governorate.stress_label} valueColor={stressColor} />
-              <DataRow label="إجمالي الأبراج"     value={result.governorate.total_towers.toLocaleString("ar-EG")} />
+              <DataRow label="المحافظة"      value={result.governorate.name}          valueColor="#38bdf8" />
+              <DataRow label="نطاق البحث"    value={result.governorate.search_scope} />
+              <DataRow label="حالة الشبكة"   value={result.governorate.stress_label} valueColor={stressColor} />
+              <DataRow label="إجمالي الأبراج" value={result.governorate.total_towers.toLocaleString("ar-EG")} />
               <DataRow
                 label="أبراج عالية الخطورة"
                 value={`${result.governorate.high_risk_towers.toLocaleString("ar-EG")} (${result.governorate.high_risk_pct}%)`}
@@ -611,9 +529,9 @@ export default function App() {
             </Card>
 
             <Card title="أقرب برج اتصالات" icon="📶" borderColor="#818cf8">
-              <DataRow label="كود البرج"      value={result.nearest_tower.tower_id}           valueColor="#818cf8" />
-              <DataRow label="شركة التشغيل"   value={result.nearest_tower.network_operator}   valueColor="#e2e8f0" />
-              <DataRow label="المسافة عنك"    value={result.nearest_tower.distance_formatted}  valueColor="#38bdf8" />
+              <DataRow label="كود البرج"       value={result.nearest_tower.tower_id}           valueColor="#818cf8" />
+              <DataRow label="شركة التشغيل"    value={result.nearest_tower.network_operator}   valueColor="#e2e8f0" />
+              <DataRow label="المسافة عنك"     value={result.nearest_tower.distance_formatted}  valueColor="#38bdf8" />
               <DataRow label="المسافة (أمتار)" value={`${result.nearest_tower.distance_meters.toLocaleString("ar-EG")} م`} />
               <DataRow
                 label="مستوى الخطورة"
@@ -640,43 +558,26 @@ export default function App() {
               </div>
             </Card>
 
-            <Card title="تحليل الذكاء الاصطناعي" icon="🤖" borderColor={aiColor}>
-              <div style={{
-                textAlign   : "center",
-                padding     : "20px",
-                background  : `${aiColor}11`,
-                borderRadius: "12px",
-                border      : `1px solid ${aiColor}44`,
-                marginBottom: "18px",
-              }}>
-                <div style={{ fontSize: "3rem", marginBottom: "8px" }}>
-                  {result.ai_analysis.is_overloaded ? "🔴" : "🟢"}
-                </div>
-                <div style={{ color: aiColor, fontSize: "1.4rem", fontWeight: 800 }}>
-                  {result.ai_analysis.status_arabic}
-                </div>
-                <div style={{ color: "#64748b", fontSize: "0.8rem", marginTop: "4px" }}>
-                  {result.ai_analysis.status_english}
-                </div>
-              </div>
-              <div style={{ marginBottom: "16px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                  <span style={{ color: "#94a3b8", fontSize: "0.82rem" }}>نسبة ثقة النموذج</span>
-                  <span style={{ color: aiColor, fontWeight: 700 }}>{result.ai_analysis.confidence_pct}%</span>
-                </div>
-                <ProgressBar value={result.ai_analysis.confidence_pct} color={aiColor} />
-              </div>
-              <div style={{
-                background  : "#0f172a",
-                borderRadius: "10px",
-                padding     : "12px 16px",
-                color       : "#94a3b8",
-                fontSize    : "0.82rem",
-                lineHeight  : 1.6,
-                borderRight : `3px solid ${aiColor}`,
-              }}>
-                💡 {result.ai_analysis.note}
-              </div>
+            <Card title="تفاصيل البرج" icon="📡" borderColor="#38bdf8">
+              <DataRow
+                label="نوع الشبكة"
+                value={result.tower_details.network_type}
+                valueColor="#38bdf8"
+              />
+              <DataRow
+                label="عمر البرج"
+                value={`${result.tower_details.age_years} سنة`}
+              />
+              <DataRow
+                label="المسافة من الشبكة الكهربائية"
+                value={`${result.tower_details.distance_to_grid} كم`}
+                valueColor={result.tower_details.distance_to_grid > 10 ? "#f59e0b" : "#22c55e"}
+              />
+              <DataRow
+                label="الطاقة الاستيعابية"
+                value={`${result.tower_details.capacity.toLocaleString("ar-EG")} مستخدم`}
+                valueColor="#818cf8"
+              />
             </Card>
 
           </div>
