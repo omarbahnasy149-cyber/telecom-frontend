@@ -3,16 +3,46 @@ import { useState, useEffect, useRef } from "react";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const TOWERS_URL  = import.meta.env.VITE_BACKEND_URL?.replace("predict_by_location", "towers_near");
 
+const GOVERNORATES = {
+  "Alexandria"  : { ar: "الإسكندرية",   cities: ["الإسكندرية", "برج العرب", "أبو قير"] },
+  "Aswan"       : { ar: "أسوان",         cities: ["أسوان", "كوم أمبو", "إدفو", "أبو سمبل"] },
+  "Asyout"      : { ar: "أسيوط",         cities: ["أسيوط", "ديروط", "منفلوط", "أبنوب"] },
+  "Behera"      : { ar: "البحيرة",       cities: ["دمنهور", "كفر الدوار", "رشيد", "إيتاى البارود", "أبو حمص"] },
+  "Beni Suef"   : { ar: "بني سويف",     cities: ["بني سويف", "الفشن", "ببا", "إهناسيا"] },
+  "Cairo"       : { ar: "القاهرة",       cities: ["القاهرة", "مدينة نصر", "حلوان", "شبرا", "مصر الجديدة"] },
+  "Dakahlia"    : { ar: "الدقهلية",      cities: ["المنصورة", "طلخا", "ميت غمر", "أجا", "بلقاس"] },
+  "Damietta"    : { ar: "دمياط",         cities: ["دمياط", "رأس البر", "فارسكور", "الزرقا"] },
+  "Fayoum"      : { ar: "الفيوم",        cities: ["الفيوم", "طامية", "سنورس", "إطسا"] },
+  "Gharbia"     : { ar: "الغربية",       cities: ["طنطا", "المحلة الكبرى", "كفر الزيات", "زفتى", "سمنود"] },
+  "Giza"        : { ar: "الجيزة",        cities: ["الجيزة", "6 أكتوبر", "الشيخ زايد", "العياط", "الصف"] },
+  "Ismailia"    : { ar: "الإسماعيلية",   cities: ["الإسماعيلية", "القنطرة", "فايد", "التل الكبير"] },
+  "Kafr El-Shikh": { ar: "كفر الشيخ",   cities: ["كفر الشيخ", "دسوق", "فوه", "سيدي سالم", "بيلا"] },
+  "Kalyoubia"   : { ar: "القليوبية",     cities: ["بنها", "شبرا الخيمة", "قليوب", "طوخ", "العبور"] },
+  "Luxor"       : { ar: "الأقصر",        cities: ["الأقصر", "أرمنت", "إسنا", "الطود"] },
+  "Matrouh"     : { ar: "مطروح",         cities: ["مرسى مطروح", "الحمام", "الضبعة", "سيوة"] },
+  "Menia"       : { ar: "المنيا",        cities: ["المنيا", "ملوي", "سمالوط", "أبو قرقاص", "مغاغة"] },
+  "Menoufia"    : { ar: "المنوفية",      cities: ["شبين الكوم", "منوف", "أشمون", "السادات", "تلا"] },
+  "New Valley"  : { ar: "الوادي الجديد", cities: ["الخارجة", "الداخلة", "الفرافرة", "بريس"] },
+  "North Sinai" : { ar: "شمال سيناء",   cities: ["العريش", "رفح", "الشيخ زويد", "بئر العبد"] },
+  "Port Said"   : { ar: "بور سعيد",     cities: ["بور سعيد", "بور فؤاد"] },
+  "Qena"        : { ar: "قنا",           cities: ["قنا", "نجع حمادي", "قوص", "دشنا", "أبو تشت"] },
+  "Red Sea"     : { ar: "البحر الأحمر",  cities: ["الغردقة", "سفاجا", "القصير", "مرسى علم"] },
+  "Sharkia"     : { ar: "الشرقية",       cities: ["الزقازيق", "العاشر من رمضان", "بلبيس", "منيا القمح", "أبو حماد"] },
+  "South Sinai" : { ar: "جنوب سيناء",   cities: ["شرم الشيخ", "طابا", "دهب", "نويبع", "الطور"] },
+  "Suez"        : { ar: "السويس",        cities: ["السويس", "عتاقة", "الجناين"] },
+  "Suhag"       : { ar: "سوهاج",         cities: ["سوهاج", "أخميم", "طهطا", "جرجا", "المراغة"] },
+};
+
 function Card({ title, icon, children, borderColor = "#38bdf8" }) {
   return (
     <div style={{
-      background   : "#1e293b",
-      border       : `1px solid ${borderColor}`,
-      borderRadius : "16px",
-      padding      : "24px",
-      flex         : "1 1 280px",
-      minWidth     : "280px",
-      boxShadow    : `0 0 20px ${borderColor}22`,
+      background  : "#1e293b",
+      border      : `1px solid ${borderColor}`,
+      borderRadius: "16px",
+      padding     : "24px",
+      flex        : "1 1 280px",
+      minWidth    : "280px",
+      boxShadow   : `0 0 20px ${borderColor}22`,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
         <span style={{ fontSize: "1.6rem" }}>{icon}</span>
@@ -26,11 +56,11 @@ function Card({ title, icon, children, borderColor = "#38bdf8" }) {
 function DataRow({ label, value, valueColor }) {
   return (
     <div style={{
-      display        : "flex",
-      justifyContent : "space-between",
-      alignItems     : "center",
-      padding        : "8px 0",
-      borderBottom   : "1px solid #334155",
+      display       : "flex",
+      justifyContent: "space-between",
+      alignItems    : "center",
+      padding       : "8px 0",
+      borderBottom  : "1px solid #334155",
     }}>
       <span style={{ color: "#94a3b8", fontSize: "0.85rem" }}>{label}</span>
       <span style={{ color: valueColor || "#e2e8f0", fontWeight: 600, fontSize: "0.92rem" }}>{value}</span>
@@ -53,6 +83,19 @@ function ProgressBar({ value, max = 100, color = "#38bdf8" }) {
   );
 }
 
+const selectStyle = {
+  width       : "100%",
+  background  : "#0f172a",
+  border      : "1px solid #334155",
+  borderRadius: "10px",
+  padding     : "12px 16px",
+  color       : "#e2e8f0",
+  fontSize    : "0.95rem",
+  outline     : "none",
+  cursor      : "pointer",
+  marginBottom: "12px",
+};
+
 export default function App() {
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState(null);
@@ -60,12 +103,12 @@ export default function App() {
   const [userInfo, setUserInfo] = useState(null);
   const [towers,   setTowers]   = useState([]);
 
-  const [inputMode,    setInputMode]    = useState(null);
-  const [manualGov,    setManualGov]    = useState("");
-  const [manualCity,   setManualCity]   = useState("");
-  const [searching,    setSearching]    = useState(false);
-  const [pickerCenter, setPickerCenter] = useState(null);
-  const [pickedCoords, setPickedCoords] = useState(null);
+  const [inputMode,      setInputMode]      = useState(null);
+  const [selectedGov,    setSelectedGov]    = useState("");
+  const [selectedCity,   setSelectedCity]   = useState("");
+  const [searching,      setSearching]      = useState(false);
+  const [pickerCenter,   setPickerCenter]   = useState(null);
+  const [pickedCoords,   setPickedCoords]   = useState(null);
 
   const mapRef               = useRef(null);
   const mapInstanceRef       = useRef(null);
@@ -76,10 +119,7 @@ export default function App() {
 
   useEffect(() => {
     if (!userInfo || !mapRef.current || !window.L) return;
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
-      mapInstanceRef.current = null;
-    }
+    if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; }
     const map = window.L.map(mapRef.current).setView([userInfo.latitude, userInfo.longitude], 13);
     window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors",
@@ -124,10 +164,7 @@ export default function App() {
 
   useEffect(() => {
     if (!pickerCenter || !pickerMapRef.current || !window.L) return;
-    if (pickerMapInstanceRef.current) {
-      pickerMapInstanceRef.current.remove();
-      pickerMapInstanceRef.current = null;
-    }
+    if (pickerMapInstanceRef.current) { pickerMapInstanceRef.current.remove(); pickerMapInstanceRef.current = null; }
     const map = window.L.map(pickerMapRef.current).setView([pickerCenter.lat, pickerCenter.lon], 13);
     window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors",
@@ -225,23 +262,25 @@ export default function App() {
     setTowers([]);
     setPickerCenter(null);
     setPickedCoords(null);
+    setSelectedGov("");
+    setSelectedCity("");
   }
 
-  async function handleManualSearch() {
-    if (!manualGov.trim() || !manualCity.trim()) {
-      setError("من فضلك أدخل اسم المحافظة والمدينة");
+  async function handleSearch() {
+    if (!selectedGov || !selectedCity) {
+      setError("من فضلك اختر المحافظة والمدينة");
       return;
     }
     setSearching(true);
     setError(null);
     try {
-      const query = `${manualCity}, ${manualGov}, مصر`;
-      const res = await fetch(
+      const query = `${selectedCity}, ${GOVERNORATES[selectedGov].ar}, مصر`;
+      const res   = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`
       );
       const data = await res.json();
       if (!data.length) {
-        setError("لم يتم العثور على هذا الموقع، حاول كتابة الاسم بشكل مختلف");
+        setError("لم يتم العثور على هذا الموقع، حاول اختيار مدينة مختلفة");
         setSearching(false);
         return;
       }
@@ -255,7 +294,7 @@ export default function App() {
 
   function handleConfirmManualLocation() {
     if (!pickedCoords) return;
-    fetchReport(pickedCoords.lat, pickedCoords.lon, manualGov.trim());
+    fetchReport(pickedCoords.lat, pickedCoords.lon, selectedGov);
   }
 
   const stressColor = result?.governorate?.under_stress ? "#f59e0b" : "#22c55e";
@@ -320,24 +359,15 @@ export default function App() {
               disabled={loading}
               style={{
                 background  : loading && inputMode === "gps" ? "#334155" : "linear-gradient(135deg, #0284c7, #38bdf8)",
-                color       : "#fff",
-                border      : "none",
-                borderRadius: "14px",
-                padding     : "16px 36px",
-                fontSize    : "1.02rem",
-                fontWeight  : 700,
+                color       : "#fff", border: "none", borderRadius: "14px",
+                padding     : "16px 36px", fontSize: "1.02rem", fontWeight: 700,
                 cursor      : loading ? "not-allowed" : "pointer",
                 boxShadow   : "0 0 30px #38bdf844",
-                display     : "inline-flex",
-                alignItems  : "center",
-                gap         : "10px",
+                display     : "inline-flex", alignItems: "center", gap: "10px",
               }}
             >
               {loading && inputMode === "gps" ? (
-                <>
-                  <span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span>
-                  جارٍ التحليل...
-                </>
+                <><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span>جارٍ التحليل...</>
               ) : <>📍 تحديد عبر GPS</>}
             </button>
 
@@ -345,17 +375,11 @@ export default function App() {
               onClick={startManualFlow}
               disabled={loading}
               style={{
-                background  : "transparent",
-                color       : "#818cf8",
-                border      : "2px solid #818cf8",
-                borderRadius: "14px",
-                padding     : "14px 34px",
-                fontSize    : "1.02rem",
-                fontWeight  : 700,
+                background  : "transparent", color: "#818cf8",
+                border      : "2px solid #818cf8", borderRadius: "14px",
+                padding     : "14px 34px", fontSize: "1.02rem", fontWeight: 700,
                 cursor      : loading ? "not-allowed" : "pointer",
-                display     : "inline-flex",
-                alignItems  : "center",
-                gap         : "10px",
+                display     : "inline-flex", alignItems: "center", gap: "10px",
               }}
             >
               ✍️ إدخال الموقع يدويًا
@@ -371,42 +395,45 @@ export default function App() {
             padding     : "28px",
             marginBottom: "28px",
           }}>
-            <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginBottom: "18px" }}>
-              <input
-                type="text"
-                placeholder="اسم المحافظة"
-                value={manualGov}
-                onChange={(e) => setManualGov(e.target.value)}
-                style={{
-                  flex: "1 1 220px", background: "#0f172a", border: "1px solid #334155",
-                  borderRadius: "10px", padding: "12px 16px", color: "#e2e8f0",
-                  fontSize: "0.95rem", outline: "none",
-                }}
-              />
-              <input
-                type="text"
-                placeholder="اسم المدينة"
-                value={manualCity}
-                onChange={(e) => setManualCity(e.target.value)}
-                style={{
-                  flex: "1 1 220px", background: "#0f172a", border: "1px solid #334155",
-                  borderRadius: "10px", padding: "12px 16px", color: "#e2e8f0",
-                  fontSize: "0.95rem", outline: "none",
-                }}
-              />
+            <select
+              value={selectedGov}
+              onChange={(e) => { setSelectedGov(e.target.value); setSelectedCity(""); setPickerCenter(null); }}
+              style={selectStyle}
+            >
+              <option value="">— اختر المحافظة —</option>
+              {Object.entries(GOVERNORATES).map(([key, val]) => (
+                <option key={key} value={key}>{val.ar}</option>
+              ))}
+            </select>
+
+            {selectedGov && (
+              <select
+                value={selectedCity}
+                onChange={(e) => { setSelectedCity(e.target.value); setPickerCenter(null); }}
+                style={selectStyle}
+              >
+                <option value="">— اختر المدينة —</option>
+                {GOVERNORATES[selectedGov].cities.map((city) => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
+            )}
+
+            {selectedGov && selectedCity && (
               <button
-                onClick={handleManualSearch}
+                onClick={handleSearch}
                 disabled={searching}
                 style={{
-                  background: "linear-gradient(135deg, #0284c7, #38bdf8)",
-                  color: "#fff", border: "none", borderRadius: "10px",
-                  padding: "12px 28px", fontWeight: 700,
-                  cursor: searching ? "not-allowed" : "pointer",
+                  background  : "linear-gradient(135deg, #0284c7, #38bdf8)",
+                  color       : "#fff", border: "none", borderRadius: "10px",
+                  padding     : "12px 28px", fontWeight: 700, width: "100%",
+                  cursor      : searching ? "not-allowed" : "pointer",
+                  marginBottom: "12px",
                 }}
               >
-                {searching ? "جارٍ البحث..." : "🔍 ابحث عن الموقع"}
+                {searching ? "جارٍ البحث..." : "🔍 عرض الخريطة"}
               </button>
-            </div>
+            )}
 
             {pickerCenter && (
               <>
@@ -421,14 +448,9 @@ export default function App() {
                   disabled={!pickedCoords || loading}
                   style={{
                     background  : loading ? "#334155" : "linear-gradient(135deg, #16a34a, #22c55e)",
-                    color       : "#fff",
-                    border      : "none",
-                    borderRadius: "12px",
-                    padding     : "14px 36px",
-                    fontWeight  : 700,
-                    fontSize    : "1rem",
-                    cursor      : loading ? "not-allowed" : "pointer",
-                    width       : "100%",
+                    color       : "#fff", border: "none", borderRadius: "12px",
+                    padding     : "14px 36px", fontWeight: 700, fontSize: "1rem",
+                    cursor      : loading ? "not-allowed" : "pointer", width: "100%",
                   }}
                 >
                   {loading ? "جارٍ التحليل..." : "✅ تأكيد الموقع وإصدار التقرير"}
@@ -440,21 +462,15 @@ export default function App() {
 
         {userInfo && (
           <div style={{
-            background  : "#1e293b",
-            border      : "1px solid #334155",
-            borderRadius: "12px",
-            padding     : "16px 24px",
-            marginBottom: "28px",
-            display     : "flex",
-            flexWrap    : "wrap",
-            gap         : "20px",
-            alignItems  : "center",
+            background  : "#1e293b", border: "1px solid #334155",
+            borderRadius: "12px", padding: "16px 24px", marginBottom: "28px",
+            display     : "flex", flexWrap: "wrap", gap: "20px", alignItems: "center",
           }}>
             <span style={{ color: "#64748b", fontSize: "0.8rem" }}>📌 الموقع المحدد:</span>
             {[
               { label: "خط العرض", value: userInfo.latitude?.toFixed(4) },
               { label: "خط الطول", value: userInfo.longitude?.toFixed(4) },
-              { label: "المحافظة", value: userInfo.governorate || "—" },
+              { label: "المحافظة", value: userInfo.governorate ? (GOVERNORATES[userInfo.governorate]?.ar || userInfo.governorate) : "—" },
             ].map(({ label, value }) => (
               <div key={label} style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                 <span style={{ color: "#64748b", fontSize: "0.78rem" }}>{label}:</span>
@@ -466,18 +482,12 @@ export default function App() {
 
         {userInfo && (
           <div style={{
-            background  : "#1e293b",
-            border      : "1px solid #334155",
-            borderRadius: "16px",
-            overflow    : "hidden",
-            marginBottom: "28px",
+            background  : "#1e293b", border: "1px solid #334155",
+            borderRadius: "16px", overflow: "hidden", marginBottom: "28px",
           }}>
             <div style={{
-              padding     : "14px 20px",
-              borderBottom: "1px solid #334155",
-              display     : "flex",
-              alignItems  : "center",
-              gap         : "10px",
+              padding     : "14px 20px", borderBottom: "1px solid #334155",
+              display     : "flex", alignItems: "center", gap: "10px",
             }}>
               <span style={{ fontSize: "1.2rem" }}>🗺️</span>
               <span style={{ color: "#38bdf8", fontWeight: 700 }}>خريطة الأبراج التفاعلية</span>
@@ -491,15 +501,9 @@ export default function App() {
 
         {error && (
           <div style={{
-            background  : "#450a0a",
-            border      : "1px solid #ef4444",
-            borderRadius: "12px",
-            padding     : "16px 24px",
-            color       : "#fca5a5",
-            marginBottom: "28px",
-            display     : "flex",
-            gap         : "10px",
-            alignItems  : "center",
+            background  : "#450a0a", border: "1px solid #ef4444",
+            borderRadius: "12px", padding: "16px 24px", color: "#fca5a5",
+            marginBottom: "28px", display: "flex", gap: "10px", alignItems: "center",
           }}>
             <span style={{ fontSize: "1.4rem" }}>⚠️</span>
             <div><strong>حدث خطأ:</strong> {error}</div>
@@ -510,9 +514,9 @@ export default function App() {
           <div style={{ display: "flex", flexWrap: "wrap", gap: "24px" }}>
 
             <Card title="التقييم العام للمحافظة" icon="🗺️" borderColor={stressColor}>
-              <DataRow label="المحافظة"      value={result.governorate.name}          valueColor="#38bdf8" />
-              <DataRow label="نطاق البحث"    value={result.governorate.search_scope} />
-              <DataRow label="حالة الشبكة"   value={result.governorate.stress_label} valueColor={stressColor} />
+              <DataRow label="المحافظة"       value={GOVERNORATES[result.governorate.name]?.ar || result.governorate.name} valueColor="#38bdf8" />
+              <DataRow label="نطاق البحث"     value={result.governorate.search_scope} />
+              <DataRow label="حالة الشبكة"    value={result.governorate.stress_label} valueColor={stressColor} />
               <DataRow label="إجمالي الأبراج" value={result.governorate.total_towers.toLocaleString("ar-EG")} />
               <DataRow
                 label="أبراج عالية الخطورة"
@@ -543,11 +547,8 @@ export default function App() {
               />
               <div style={{ marginTop: "16px", textAlign: "center" }}>
                 <div style={{
-                  display     : "inline-block",
-                  background  : "#0f172a",
-                  borderRadius: "12px",
-                  padding     : "12px 24px",
-                  border      : "1px solid #818cf844",
+                  display: "inline-block", background: "#0f172a",
+                  borderRadius: "12px", padding: "12px 24px", border: "1px solid #818cf844",
                 }}>
                   <div style={{ fontSize: "2rem" }}>📍</div>
                   <div style={{ color: "#818cf8", fontWeight: 700, fontSize: "1.1rem" }}>
@@ -559,15 +560,8 @@ export default function App() {
             </Card>
 
             <Card title="تفاصيل البرج" icon="📡" borderColor="#38bdf8">
-              <DataRow
-                label="نوع الشبكة"
-                value={result.tower_details.network_type}
-                valueColor="#38bdf8"
-              />
-              <DataRow
-                label="عمر البرج"
-                value={`${result.tower_details.age_years} سنة`}
-              />
+              <DataRow label="نوع الشبكة"                value={result.tower_details.network_type} valueColor="#38bdf8" />
+              <DataRow label="عمر البرج"                 value={`${result.tower_details.age_years} سنة`} />
               <DataRow
                 label="المسافة من الشبكة الكهربائية"
                 value={`${result.tower_details.distance_to_grid} كم`}
@@ -598,6 +592,7 @@ export default function App() {
         .leaflet-container { font-family: 'Segoe UI', sans-serif; }
         .leaflet-popup-content-wrapper { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; }
         .leaflet-popup-tip { background: #1e293b; }
+        select option { background: #1e293b; color: #e2e8f0; }
       `}</style>
     </div>
   );
