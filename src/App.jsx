@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import ReflectBackground from "./ReflectBackground"; // 👈 استدعاء الخلفية
+import ReflectBackground from "./ReflectBackground";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const TOWERS_URL  = import.meta.env.VITE_BACKEND_URL?.replace("predict_by_location", "towers_near");
@@ -34,7 +34,7 @@ const GOVERNORATES = {
   "Suhag"       : { ar: "سوهاج",         cities: ["سوهاج", "أخميم", "طهطا", "جرجا", "المراغة"] },
 };
 
-function Card({ title, icon, children, borderColor = "#38bdf8" }) {
+function Card({ title, icon, children, borderColor = "#60a5fa" }) {
   return (
     <div style={{
       background  : "rgba(30, 41, 59, 0.65)",
@@ -45,7 +45,7 @@ function Card({ title, icon, children, borderColor = "#38bdf8" }) {
       padding     : "24px",
       flex        : "1 1 300px",
       minWidth    : "280px",
-      boxShadow   : `0 0 20px ${borderColor}22`,
+      boxShadow   : `0 0 20px ${borderColor}15`,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
         <span style={{ fontSize: "1.6rem" }}>{icon}</span>
@@ -71,7 +71,7 @@ function DataRow({ label, value, valueColor }) {
   );
 }
 
-function ProgressBar({ value, max = 100, color = "#38bdf8" }) {
+function ProgressBar({ value, max = 100, color = "#60a5fa" }) {
   const pct = Math.min((value / max) * 100, 100);
   return (
     <div style={{ background: "rgba(15, 23, 42, 0.6)", borderRadius: "99px", height: "10px", overflow: "hidden", marginTop: "6px" }}>
@@ -153,7 +153,7 @@ export default function App() {
         .addTo(towersLayerRef.current)
         .bindPopup(`
           <div style="direction:rtl;font-family:sans-serif;min-width:160px;">
-            <b style="color:#0284c7;">${tower.tower_id}</b><br/>
+            <b style="color:#60a5fa;">${tower.tower_id}</b><br/>
             <span>${tower.network_operator}</span><br/>
             <span>${tower.government}</span><br/>
             <span style="color:${
@@ -314,22 +314,22 @@ export default function App() {
       overflowX : "hidden",
     }}>
       
-      {/* الخلفية المتحركة */}
+      {/* الخلفية المتحركة بلون أزرق هادي ورايق */}
       <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: -1 }}>
         <ReflectBackground 
-          tint="#38bdf8" 
+          tint="#60a5fa" 
           speed={100} 
           style={{ width: '100%', height: '100%' }}
         />
       </div>
 
-      {/* محتوى الموقع بعرض الشاشة بالكامل */}
+      {/* محتوى الموقع */}
       <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
         <header style={{
           background  : "rgba(30, 41, 59, 0.65)",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
-          borderBottom: "1px solid rgba(51, 65, 85, 0.5)",
+          borderBottom: "1px solid rgba(96, 165, 250, 0.3)",
           padding     : "20px 40px",
           display     : "flex",
           alignItems  : "center",
@@ -343,7 +343,7 @@ export default function App() {
               margin              : 0,
               fontSize            : "1.4rem",
               fontWeight          : 800,
-              background          : "linear-gradient(90deg, #38bdf8, #818cf8)",
+              background          : "linear-gradient(90deg, #60a5fa, #93c5fd)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor : "transparent",
             }}>
@@ -355,23 +355,22 @@ export default function App() {
           </div>
         </header>
 
-        {/* شلنا الـ maxWidth وخليناها تأخد عرض الشاشة مع هوامش جانبية مريحة */}
         <main style={{ width: "100%", padding: "40px 30px" }}>
 
           <div style={{
             background  : "linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 39, 68, 0.7) 100%)",
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
-            border      : "1px solid rgba(56, 189, 248, 0.2)",
+            border      : "1px solid rgba(96, 165, 250, 0.25)",
             borderRadius: "20px",
             padding     : "40px",
             textAlign   : "center",
             marginBottom: "36px",
-            boxShadow   : "0 0 60px rgba(56, 189, 248, 0.1)",
+            boxShadow   : "0 0 60px rgba(96, 165, 250, 0.1)",
             width       : "100%",
           }}>
             <div style={{ fontSize: "3.5rem", marginBottom: "16px" }}>🛰️</div>
-            <h2 style={{ margin: "0 0 10px", fontSize: "1.5rem", color: "#38bdf8" }}>
+            <h2 style={{ margin: "0 0 10px", fontSize: "1.5rem", color: "#60a5fa" }}>
               مراقبة الشبكة في الوقت الفعلي
             </h2>
             <p style={{ color: "#94a3b8", marginBottom: "32px", lineHeight: 1.7 }}>
@@ -382,11 +381,11 @@ export default function App() {
                 onClick={handleGpsFlow}
                 disabled={loading}
                 style={{
-                  background  : loading && inputMode === "gps" ? "rgba(51, 65, 85, 0.8)" : "linear-gradient(135deg, #0284c7, #38bdf8)",
+                  background  : loading && inputMode === "gps" ? "rgba(51, 65, 85, 0.8)" : "linear-gradient(135deg, #2563eb, #60a5fa)",
                   color       : "#fff", border: "none", borderRadius: "14px",
                   padding     : "16px 36px", fontSize: "1.02rem", fontWeight: 700,
                   cursor      : loading ? "not-allowed" : "pointer",
-                  boxShadow   : "0 0 30px #38bdf844",
+                  boxShadow   : "0 0 30px rgba(96, 165, 250, 0.3)",
                   display     : "inline-flex", alignItems: "center", gap: "10px",
                 }}
               >
@@ -399,8 +398,8 @@ export default function App() {
                 onClick={startManualFlow}
                 disabled={loading}
                 style={{
-                  background  : "rgba(129, 140, 248, 0.1)", color: "#818cf8",
-                  border      : "2px solid #818cf8", borderRadius: "14px",
+                  background  : "rgba(96, 165, 250, 0.1)", color: "#93c5fd",
+                  border      : "2px solid #60a5fa", borderRadius: "14px",
                   padding     : "14px 34px", fontSize: "1.02rem", fontWeight: 700,
                   cursor      : loading ? "not-allowed" : "pointer",
                   display     : "inline-flex", alignItems: "center", gap: "10px",
@@ -417,7 +416,7 @@ export default function App() {
               background  : "rgba(30, 41, 59, 0.7)",
               backdropFilter: "blur(12px)",
               WebkitBackdropFilter: "blur(12px)",
-              border      : "1px solid rgba(129, 140, 248, 0.3)",
+              border      : "1px solid rgba(96, 165, 250, 0.3)",
               borderRadius: "16px",
               padding     : "28px",
               marginBottom: "28px",
@@ -452,7 +451,7 @@ export default function App() {
                   onClick={handleSearch}
                   disabled={searching}
                   style={{
-                    background  : "linear-gradient(135deg, #0284c7, #38bdf8)",
+                    background  : "linear-gradient(135deg, #2563eb, #60a5fa)",
                     color       : "#fff", border: "none", borderRadius: "10px",
                     padding     : "12px 28px", fontWeight: 700, width: "100%",
                     cursor      : searching ? "not-allowed" : "pointer",
@@ -493,7 +492,7 @@ export default function App() {
               background  : "rgba(30, 41, 59, 0.7)",
               backdropFilter: "blur(12px)",
               WebkitBackdropFilter: "blur(12px)",
-              border      : "1px solid rgba(51, 65, 85, 0.5)",
+              border      : "1px solid rgba(96, 165, 250, 0.3)",
               borderRadius: "12px", padding: "16px 24px", marginBottom: "28px",
               display     : "flex", flexWrap: "wrap", gap: "20px", alignItems: "center",
               width       : "100%",
@@ -506,7 +505,7 @@ export default function App() {
               ].map(({ label, value }) => (
                 <div key={label} style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                   <span style={{ color: "#94a3b8", fontSize: "0.78rem" }}>{label}:</span>
-                  <span style={{ color: "#38bdf8", fontWeight: 600, fontSize: "0.85rem" }}>{value}</span>
+                  <span style={{ color: "#60a5fa", fontWeight: 600, fontSize: "0.85rem" }}>{value}</span>
                 </div>
               ))}
             </div>
@@ -517,16 +516,16 @@ export default function App() {
               background  : "rgba(30, 41, 59, 0.7)",
               backdropFilter: "blur(12px)",
               WebkitBackdropFilter: "blur(12px)",
-              border      : "1px solid rgba(51, 65, 85, 0.5)",
+              border      : "1px solid rgba(96, 165, 250, 0.3)",
               borderRadius: "16px", overflow: "hidden", marginBottom: "28px",
               width       : "100%",
             }}>
               <div style={{
-                padding     : "14px 20px", borderBottom: "1px solid rgba(51, 65, 85, 0.5)",
+                padding     : "14px 20px", borderBottom: "1px solid rgba(96, 165, 250, 0.3)",
                 display     : "flex", alignItems: "center", gap: "10px",
               }}>
                 <span style={{ fontSize: "1.2rem" }}>🗺️</span>
-                <span style={{ color: "#38bdf8", fontWeight: 700 }}>خريطة الأبراج التفاعلية</span>
+                <span style={{ color: "#60a5fa", fontWeight: 700 }}>خريطة الأبراج التفاعلية</span>
                 <span style={{ color: "#94a3b8", fontSize: "0.8rem", marginRight: "auto" }}>
                   🔴 خطورة عالية &nbsp; 🟡 خطورة متوسطة &nbsp; 🟢 مستقر &nbsp; 📍 موقعك
                 </span>
@@ -554,7 +553,7 @@ export default function App() {
             <div style={{ display: "flex", flexWrap: "wrap", gap: "24px", width: "100%" }}>
 
               <Card title="التقييم العام للمحافظة" icon="🗺️" borderColor={stressColor}>
-                <DataRow label="المحافظة"       value={GOVERNORATES[result.governorate.name]?.ar || result.governorate.name} valueColor="#38bdf8" />
+                <DataRow label="المحافظة"       value={GOVERNORATES[result.governorate.name]?.ar || result.governorate.name} valueColor="#60a5fa" />
                 <DataRow label="نطاق البحث"     value={result.governorate.search_scope} />
                 <DataRow label="حالة الشبكة"    value={result.governorate.stress_label} valueColor={stressColor} />
                 <DataRow label="إجمالي الأبراج" value={result.governorate.total_towers.toLocaleString("ar-EG")} />
@@ -572,10 +571,10 @@ export default function App() {
                 </div>
               </Card>
 
-              <Card title="أقرب برج اتصالات" icon="📶" borderColor="#818cf8">
-                <DataRow label="كود البرج"       value={result.nearest_tower.tower_id}           valueColor="#818cf8" />
+              <Card title="أقرب برج اتصالات" icon="📶" borderColor="#93c5fd">
+                <DataRow label="كود البرج"       value={result.nearest_tower.tower_id}           valueColor="#93c5fd" />
                 <DataRow label="شركة التشغيل"    value={result.nearest_tower.network_operator}   valueColor="#e2e8f0" />
-                <DataRow label="المسافة عنك"     value={result.nearest_tower.distance_formatted}  valueColor="#38bdf8" />
+                <DataRow label="المسافة عنك"     value={result.nearest_tower.distance_formatted}  valueColor="#60a5fa" />
                 <DataRow label="المسافة (أمتار)" value={`${result.nearest_tower.distance_meters.toLocaleString("ar-EG")} م`} />
                 <DataRow
                   label="مستوى الخطورة"
@@ -588,10 +587,10 @@ export default function App() {
                 <div style={{ marginTop: "16px", textAlign: "center" }}>
                   <div style={{
                     display: "inline-block", background: "rgba(15, 23, 42, 0.6)",
-                    borderRadius: "12px", padding: "12px 24px", border: "1px solid rgba(129, 140, 248, 0.3)",
+                    borderRadius: "12px", padding: "12px 24px", border: "1px solid rgba(147, 197, 253, 0.3)",
                   }}>
                     <div style={{ fontSize: "2rem" }}>📍</div>
-                    <div style={{ color: "#818cf8", fontWeight: 700, fontSize: "1.1rem" }}>
+                    <div style={{ color: "#93c5fd", fontWeight: 700, fontSize: "1.1rem" }}>
                       {result.nearest_tower.distance_formatted}
                     </div>
                     <div style={{ color: "#94a3b8", fontSize: "0.75rem" }}>من موقعك الحالي</div>
@@ -599,8 +598,8 @@ export default function App() {
                 </div>
               </Card>
 
-              <Card title="تفاصيل البرج" icon="📡" borderColor="#38bdf8">
-                <DataRow label="نوع الشبكة"                value={result.tower_details.network_type} valueColor="#38bdf8" />
+              <Card title="تفاصيل البرج" icon="📡" borderColor="#60a5fa">
+                <DataRow label="نوع الشبكة"                value={result.tower_details.network_type} valueColor="#60a5fa" />
                 <DataRow label="عمر البرج"                 value={`${result.tower_details.age_years} سنة`} />
                 <DataRow
                   label="المسافة من الشبكة الكهربائية"
@@ -610,7 +609,7 @@ export default function App() {
                 <DataRow
                   label="الطاقة الاستيعابية"
                   value={`${result.tower_details.capacity.toLocaleString("ar-EG")} مستخدم`}
-                  valueColor="#818cf8"
+                  valueColor="#93c5fd"
                 />
               </Card>
 
