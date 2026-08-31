@@ -37,13 +37,13 @@ const GOVERNORATES = {
 function Card({ title, icon, children, borderColor = "#38bdf8" }) {
   return (
     <div style={{
-      background  : "rgba(30, 41, 59, 0.65)", // Glassmorphism
+      background  : "rgba(30, 41, 59, 0.65)",
       backdropFilter: "blur(12px)",
       WebkitBackdropFilter: "blur(12px)",
       border      : `1px solid ${borderColor}`,
       borderRadius: "16px",
       padding     : "24px",
-      flex        : "1 1 280px",
+      flex        : "1 1 300px",
       minWidth    : "280px",
       boxShadow   : `0 0 20px ${borderColor}22`,
     }}>
@@ -87,17 +87,17 @@ function ProgressBar({ value, max = 100, color = "#38bdf8" }) {
 }
 
 const selectStyle = {
-  width       : "100%",
-  background  : "rgba(15, 23, 42, 0.6)", // Glassmorphism
+  width         : "100%",
+  background    : "rgba(15, 23, 42, 0.6)",
   backdropFilter: "blur(8px)",
-  border      : "1px solid #334155",
-  borderRadius: "10px",
-  padding     : "12px 16px",
-  color       : "#e2e8f0",
-  fontSize    : "0.95rem",
-  outline     : "none",
-  cursor      : "pointer",
-  marginBottom: "12px",
+  border        : "1px solid #334155",
+  borderRadius  : "10px",
+  padding       : "12px 16px",
+  color         : "#e2e8f0",
+  fontSize      : "0.95rem",
+  outline       : "none",
+  cursor        : "pointer",
+  marginBottom  : "12px",
 };
 
 export default function App() {
@@ -304,28 +304,29 @@ export default function App() {
   const stressColor = result?.governorate?.under_stress ? "#f59e0b" : "#22c55e";
 
   return (
-    // 👈 الكونتينر الأساسي بقا شفاف
     <div style={{
       position  : "relative",
       minHeight : "100vh",
+      width     : "100vw",
       color     : "#e2e8f0",
       fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
       direction : "rtl",
+      overflowX : "hidden",
     }}>
       
-      {/* 👈 الخلفية المتحركة */}
+      {/* الخلفية المتحركة */}
       <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: -1 }}>
         <ReflectBackground 
-          tint="#38bdf8" // 👈 لون السماوي عشان يدي إحساس موجات الداتا والشبكات
+          tint="#38bdf8" 
           speed={100} 
           style={{ width: '100%', height: '100%' }}
         />
       </div>
 
-      {/* 👈 محتوى الموقع */}
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      {/* محتوى الموقع بعرض الشاشة بالكامل */}
+      <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
         <header style={{
-          background  : "rgba(30, 41, 59, 0.65)", // Glassmorphism
+          background  : "rgba(30, 41, 59, 0.65)",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
           borderBottom: "1px solid rgba(51, 65, 85, 0.5)",
@@ -334,6 +335,7 @@ export default function App() {
           alignItems  : "center",
           gap         : "16px",
           boxShadow   : "0 4px 30px rgba(0, 0, 0, 0.3)",
+          width       : "100%",
         }}>
           <span style={{ fontSize: "2rem" }}>📡</span>
           <div>
@@ -353,7 +355,8 @@ export default function App() {
           </div>
         </header>
 
-        <main style={{ maxWidth: "1100px", margin: "0 auto", padding: "40px 20px" }}>
+        {/* شلنا الـ maxWidth وخليناها تأخد عرض الشاشة مع هوامش جانبية مريحة */}
+        <main style={{ width: "100%", padding: "40px 30px" }}>
 
           <div style={{
             background  : "linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 39, 68, 0.7) 100%)",
@@ -365,6 +368,7 @@ export default function App() {
             textAlign   : "center",
             marginBottom: "36px",
             boxShadow   : "0 0 60px rgba(56, 189, 248, 0.1)",
+            width       : "100%",
           }}>
             <div style={{ fontSize: "3.5rem", marginBottom: "16px" }}>🛰️</div>
             <h2 style={{ margin: "0 0 10px", fontSize: "1.5rem", color: "#38bdf8" }}>
@@ -417,6 +421,7 @@ export default function App() {
               borderRadius: "16px",
               padding     : "28px",
               marginBottom: "28px",
+              width       : "100%",
             }}>
               <select
                 value={selectedGov}
@@ -491,6 +496,7 @@ export default function App() {
               border      : "1px solid rgba(51, 65, 85, 0.5)",
               borderRadius: "12px", padding: "16px 24px", marginBottom: "28px",
               display     : "flex", flexWrap: "wrap", gap: "20px", alignItems: "center",
+              width       : "100%",
             }}>
               <span style={{ color: "#94a3b8", fontSize: "0.8rem" }}>📌 الموقع المحدد:</span>
               {[
@@ -513,6 +519,7 @@ export default function App() {
               WebkitBackdropFilter: "blur(12px)",
               border      : "1px solid rgba(51, 65, 85, 0.5)",
               borderRadius: "16px", overflow: "hidden", marginBottom: "28px",
+              width       : "100%",
             }}>
               <div style={{
                 padding     : "14px 20px", borderBottom: "1px solid rgba(51, 65, 85, 0.5)",
@@ -536,6 +543,7 @@ export default function App() {
               border      : "1px solid #ef4444",
               borderRadius: "12px", padding: "16px 24px", color: "#fca5a5",
               marginBottom: "28px", display: "flex", gap: "10px", alignItems: "center",
+              width       : "100%",
             }}>
               <span style={{ fontSize: "1.4rem" }}>⚠️</span>
               <div><strong>حدث خطأ:</strong> {error}</div>
@@ -543,7 +551,7 @@ export default function App() {
           )}
 
           {result && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "24px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "24px", width: "100%" }}>
 
               <Card title="التقييم العام للمحافظة" icon="🗺️" borderColor={stressColor}>
                 <DataRow label="المحافظة"       value={GOVERNORATES[result.governorate.name]?.ar || result.governorate.name} valueColor="#38bdf8" />
@@ -610,7 +618,7 @@ export default function App() {
           )}
 
           {result && (
-            <div style={{ textAlign: "center", marginTop: "32px", color: "#64748b", fontSize: "0.75rem" }}>
+            <div style={{ textAlign: "center", marginTop: "32px", color: "#64748b", fontSize: "0.75rem", width: "100%" }}>
               آخر تحليل: {new Date().toLocaleString("ar-EG")}
             </div>
           )}
@@ -629,7 +637,6 @@ export default function App() {
           background: transparent !important; 
         }
 
-        /* التعديل هنا: بنجبر العنصر الأساسي يملا الشاشة كلها ويلغي أي هوامش افتراضية */
         #root {
           max-width: 100% !important;
           width: 100% !important;
