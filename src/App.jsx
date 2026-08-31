@@ -622,11 +622,19 @@ export default function App() {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         * { box-sizing: border-box; }
         
-        /* التعديل السحري هنا: خلينا الخلفية شفافة تماماً */
-        html, body, #root { 
+        html, body { 
           margin: 0; 
           padding: 0;
+          width: 100%;
           background: transparent !important; 
+        }
+
+        /* التعديل هنا: بنجبر العنصر الأساسي يملا الشاشة كلها ويلغي أي هوامش افتراضية */
+        #root {
+          max-width: 100% !important;
+          width: 100% !important;
+          padding: 0 !important;
+          margin: 0 !important;
         }
 
         .leaflet-container { font-family: 'Segoe UI', sans-serif; border-radius: 0 0 16px 16px; }
