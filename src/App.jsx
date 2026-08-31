@@ -621,7 +621,14 @@ export default function App() {
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         * { box-sizing: border-box; }
-        body { margin: 0; background-color: #0f172a; }
+        
+        /* التعديل السحري هنا: خلينا الخلفية شفافة تماماً */
+        html, body, #root { 
+          margin: 0; 
+          padding: 0;
+          background: transparent !important; 
+        }
+
         .leaflet-container { font-family: 'Segoe UI', sans-serif; border-radius: 0 0 16px 16px; }
         .leaflet-popup-content-wrapper { background: rgba(30, 41, 59, 0.95); color: #e2e8f0; border: 1px solid rgba(51, 65, 85, 0.8); }
         .leaflet-popup-tip { background: rgba(30, 41, 59, 0.95); }
