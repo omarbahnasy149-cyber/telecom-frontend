@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import ReflectBackground from "./ReflectBackground"; // 👈 استدعاء الخلفية
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const TOWERS_URL  = import.meta.env.VITE_BACKEND_URL?.replace("predict_by_location", "towers_near");
@@ -36,7 +37,9 @@ const GOVERNORATES = {
 function Card({ title, icon, children, borderColor = "#38bdf8" }) {
   return (
     <div style={{
-      background  : "#1e293b",
+      background  : "rgba(30, 41, 59, 0.65)", // Glassmorphism
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
       border      : `1px solid ${borderColor}`,
       borderRadius: "16px",
       padding     : "24px",
@@ -60,7 +63,7 @@ function DataRow({ label, value, valueColor }) {
       justifyContent: "space-between",
       alignItems    : "center",
       padding       : "8px 0",
-      borderBottom  : "1px solid #334155",
+      borderBottom  : "1px solid rgba(51, 65, 85, 0.5)",
     }}>
       <span style={{ color: "#94a3b8", fontSize: "0.85rem" }}>{label}</span>
       <span style={{ color: valueColor || "#e2e8f0", fontWeight: 600, fontSize: "0.92rem" }}>{value}</span>
@@ -71,7 +74,7 @@ function DataRow({ label, value, valueColor }) {
 function ProgressBar({ value, max = 100, color = "#38bdf8" }) {
   const pct = Math.min((value / max) * 100, 100);
   return (
-    <div style={{ background: "#0f172a", borderRadius: "99px", height: "10px", overflow: "hidden", marginTop: "6px" }}>
+    <div style={{ background: "rgba(15, 23, 42, 0.6)", borderRadius: "99px", height: "10px", overflow: "hidden", marginTop: "6px" }}>
       <div style={{
         width       : `${pct}%`,
         height      : "100%",
@@ -85,7 +88,8 @@ function ProgressBar({ value, max = 100, color = "#38bdf8" }) {
 
 const selectStyle = {
   width       : "100%",
-  background  : "#0f172a",
+  background  : "rgba(15, 23, 42, 0.6)", // Glassmorphism
+  backdropFilter: "blur(8px)",
   border      : "1px solid #334155",
   borderRadius: "10px",
   padding     : "12px 16px",
@@ -300,298 +304,327 @@ export default function App() {
   const stressColor = result?.governorate?.under_stress ? "#f59e0b" : "#22c55e";
 
   return (
+    // 👈 الكونتينر الأساسي بقا شفاف
     <div style={{
+      position  : "relative",
       minHeight : "100vh",
-      background: "#0f172a",
       color     : "#e2e8f0",
       fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
       direction : "rtl",
     }}>
+      
+      {/* 👈 الخلفية المتحركة */}
+      <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: -1 }}>
+        <ReflectBackground 
+          tint="#38bdf8" // 👈 لون السماوي عشان يدي إحساس موجات الداتا والشبكات
+          speed={100} 
+          style={{ width: '100%', height: '100%' }}
+        />
+      </div>
 
-      <header style={{
-        background  : "#1e293b",
-        borderBottom: "1px solid #334155",
-        padding     : "20px 40px",
-        display     : "flex",
-        alignItems  : "center",
-        gap         : "16px",
-        boxShadow   : "0 4px 20px #00000044",
-      }}>
-        <span style={{ fontSize: "2rem" }}>📡</span>
-        <div>
-          <h1 style={{
-            margin              : 0,
-            fontSize            : "1.4rem",
-            fontWeight          : 800,
-            background          : "linear-gradient(90deg, #38bdf8, #818cf8)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor : "transparent",
-          }}>
-            نظام مراقبة شبكات الاتصالات — Telecom Tower Monitor
-          </h1>
-          <p style={{ margin: "4px 0 0", color: "#64748b", fontSize: "0.82rem" }}>
-            تحليل البنية التحتية باستخدام الذكاء الاصطناعي والبيانات الجغرافية
-          </p>
-        </div>
-      </header>
-
-      <main style={{ maxWidth: "1100px", margin: "0 auto", padding: "40px 20px" }}>
-
-        <div style={{
-          background  : "linear-gradient(135deg, #1e293b 0%, #0f2744 100%)",
-          border      : "1px solid #38bdf833",
-          borderRadius: "20px",
-          padding     : "40px",
-          textAlign   : "center",
-          marginBottom: "36px",
-          boxShadow   : "0 0 60px #38bdf811",
+      {/* 👈 محتوى الموقع */}
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <header style={{
+          background  : "rgba(30, 41, 59, 0.65)", // Glassmorphism
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          borderBottom: "1px solid rgba(51, 65, 85, 0.5)",
+          padding     : "20px 40px",
+          display     : "flex",
+          alignItems  : "center",
+          gap         : "16px",
+          boxShadow   : "0 4px 30px rgba(0, 0, 0, 0.3)",
         }}>
-          <div style={{ fontSize: "3.5rem", marginBottom: "16px" }}>🛰️</div>
-          <h2 style={{ margin: "0 0 10px", fontSize: "1.5rem", color: "#38bdf8" }}>
-            مراقبة الشبكة في الوقت الفعلي
-          </h2>
-          <p style={{ color: "#94a3b8", marginBottom: "32px", lineHeight: 1.7 }}>
-            اختر طريقة تحديد موقعك للحصول على تقرير شامل عن أقرب برج اتصالات
-          </p>
-          <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
-            <button
-              onClick={handleGpsFlow}
-              disabled={loading}
-              style={{
-                background  : loading && inputMode === "gps" ? "#334155" : "linear-gradient(135deg, #0284c7, #38bdf8)",
-                color       : "#fff", border: "none", borderRadius: "14px",
-                padding     : "16px 36px", fontSize: "1.02rem", fontWeight: 700,
-                cursor      : loading ? "not-allowed" : "pointer",
-                boxShadow   : "0 0 30px #38bdf844",
-                display     : "inline-flex", alignItems: "center", gap: "10px",
-              }}
-            >
-              {loading && inputMode === "gps" ? (
-                <><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span>جارٍ التحليل...</>
-              ) : <>📍 تحديد عبر GPS</>}
-            </button>
-
-            <button
-              onClick={startManualFlow}
-              disabled={loading}
-              style={{
-                background  : "transparent", color: "#818cf8",
-                border      : "2px solid #818cf8", borderRadius: "14px",
-                padding     : "14px 34px", fontSize: "1.02rem", fontWeight: 700,
-                cursor      : loading ? "not-allowed" : "pointer",
-                display     : "inline-flex", alignItems: "center", gap: "10px",
-              }}
-            >
-              ✍️ إدخال الموقع يدويًا
-            </button>
+          <span style={{ fontSize: "2rem" }}>📡</span>
+          <div>
+            <h1 style={{
+              margin              : 0,
+              fontSize            : "1.4rem",
+              fontWeight          : 800,
+              background          : "linear-gradient(90deg, #38bdf8, #818cf8)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor : "transparent",
+            }}>
+              نظام مراقبة شبكات الاتصالات — Telecom Tower Monitor
+            </h1>
+            <p style={{ margin: "4px 0 0", color: "#94a3b8", fontSize: "0.82rem" }}>
+              تحليل البنية التحتية باستخدام الذكاء الاصطناعي والبيانات الجغرافية
+            </p>
           </div>
-        </div>
+        </header>
 
-        {inputMode === "manual" && !userInfo && (
+        <main style={{ maxWidth: "1100px", margin: "0 auto", padding: "40px 20px" }}>
+
           <div style={{
-            background  : "#1e293b",
-            border      : "1px solid #818cf844",
-            borderRadius: "16px",
-            padding     : "28px",
-            marginBottom: "28px",
+            background  : "linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 39, 68, 0.7) 100%)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border      : "1px solid rgba(56, 189, 248, 0.2)",
+            borderRadius: "20px",
+            padding     : "40px",
+            textAlign   : "center",
+            marginBottom: "36px",
+            boxShadow   : "0 0 60px rgba(56, 189, 248, 0.1)",
           }}>
-            <select
-              value={selectedGov}
-              onChange={(e) => { setSelectedGov(e.target.value); setSelectedCity(""); setPickerCenter(null); }}
-              style={selectStyle}
-            >
-              <option value="">— اختر المحافظة —</option>
-              {Object.entries(GOVERNORATES).map(([key, val]) => (
-                <option key={key} value={key}>{val.ar}</option>
-              ))}
-            </select>
-
-            {selectedGov && (
-              <select
-                value={selectedCity}
-                onChange={(e) => { setSelectedCity(e.target.value); setPickerCenter(null); }}
-                style={selectStyle}
-              >
-                <option value="">— اختر المدينة —</option>
-                {GOVERNORATES[selectedGov].cities.map((city) => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
-            )}
-
-            {selectedGov && selectedCity && (
+            <div style={{ fontSize: "3.5rem", marginBottom: "16px" }}>🛰️</div>
+            <h2 style={{ margin: "0 0 10px", fontSize: "1.5rem", color: "#38bdf8" }}>
+              مراقبة الشبكة في الوقت الفعلي
+            </h2>
+            <p style={{ color: "#94a3b8", marginBottom: "32px", lineHeight: 1.7 }}>
+              اختر طريقة تحديد موقعك للحصول على تقرير شامل عن أقرب برج اتصالات
+            </p>
+            <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
               <button
-                onClick={handleSearch}
-                disabled={searching}
+                onClick={handleGpsFlow}
+                disabled={loading}
                 style={{
-                  background  : "linear-gradient(135deg, #0284c7, #38bdf8)",
-                  color       : "#fff", border: "none", borderRadius: "10px",
-                  padding     : "12px 28px", fontWeight: 700, width: "100%",
-                  cursor      : searching ? "not-allowed" : "pointer",
-                  marginBottom: "12px",
+                  background  : loading && inputMode === "gps" ? "rgba(51, 65, 85, 0.8)" : "linear-gradient(135deg, #0284c7, #38bdf8)",
+                  color       : "#fff", border: "none", borderRadius: "14px",
+                  padding     : "16px 36px", fontSize: "1.02rem", fontWeight: 700,
+                  cursor      : loading ? "not-allowed" : "pointer",
+                  boxShadow   : "0 0 30px #38bdf844",
+                  display     : "inline-flex", alignItems: "center", gap: "10px",
                 }}
               >
-                {searching ? "جارٍ البحث..." : "🔍 عرض الخريطة"}
+                {loading && inputMode === "gps" ? (
+                  <><span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span>جارٍ التحليل...</>
+                ) : <>📍 تحديد عبر GPS</>}
               </button>
-            )}
 
-            {pickerCenter && (
-              <>
-                <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "12px" }}>
-                  📌 اضغط على الخريطة أو اسحب العلامة لتحديد موقعك بدقة
-                </p>
-                <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid #334155", marginBottom: "18px" }}>
-                  <div ref={pickerMapRef} style={{ height: "380px", width: "100%" }} />
-                </div>
+              <button
+                onClick={startManualFlow}
+                disabled={loading}
+                style={{
+                  background  : "rgba(129, 140, 248, 0.1)", color: "#818cf8",
+                  border      : "2px solid #818cf8", borderRadius: "14px",
+                  padding     : "14px 34px", fontSize: "1.02rem", fontWeight: 700,
+                  cursor      : loading ? "not-allowed" : "pointer",
+                  display     : "inline-flex", alignItems: "center", gap: "10px",
+                  backdropFilter: "blur(4px)",
+                }}
+              >
+                ✍️ إدخال الموقع يدويًا
+              </button>
+            </div>
+          </div>
+
+          {inputMode === "manual" && !userInfo && (
+            <div style={{
+              background  : "rgba(30, 41, 59, 0.7)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              border      : "1px solid rgba(129, 140, 248, 0.3)",
+              borderRadius: "16px",
+              padding     : "28px",
+              marginBottom: "28px",
+            }}>
+              <select
+                value={selectedGov}
+                onChange={(e) => { setSelectedGov(e.target.value); setSelectedCity(""); setPickerCenter(null); }}
+                style={selectStyle}
+              >
+                <option value="">— اختر المحافظة —</option>
+                {Object.entries(GOVERNORATES).map(([key, val]) => (
+                  <option key={key} value={key}>{val.ar}</option>
+                ))}
+              </select>
+
+              {selectedGov && (
+                <select
+                  value={selectedCity}
+                  onChange={(e) => { setSelectedCity(e.target.value); setPickerCenter(null); }}
+                  style={selectStyle}
+                >
+                  <option value="">— اختر المدينة —</option>
+                  {GOVERNORATES[selectedGov].cities.map((city) => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              )}
+
+              {selectedGov && selectedCity && (
                 <button
-                  onClick={handleConfirmManualLocation}
-                  disabled={!pickedCoords || loading}
+                  onClick={handleSearch}
+                  disabled={searching}
                   style={{
-                    background  : loading ? "#334155" : "linear-gradient(135deg, #16a34a, #22c55e)",
-                    color       : "#fff", border: "none", borderRadius: "12px",
-                    padding     : "14px 36px", fontWeight: 700, fontSize: "1rem",
-                    cursor      : loading ? "not-allowed" : "pointer", width: "100%",
+                    background  : "linear-gradient(135deg, #0284c7, #38bdf8)",
+                    color       : "#fff", border: "none", borderRadius: "10px",
+                    padding     : "12px 28px", fontWeight: 700, width: "100%",
+                    cursor      : searching ? "not-allowed" : "pointer",
+                    marginBottom: "12px",
                   }}
                 >
-                  {loading ? "جارٍ التحليل..." : "✅ تأكيد الموقع وإصدار التقرير"}
+                  {searching ? "جارٍ البحث..." : "🔍 عرض الخريطة"}
                 </button>
-              </>
-            )}
-          </div>
-        )}
+              )}
 
-        {userInfo && (
-          <div style={{
-            background  : "#1e293b", border: "1px solid #334155",
-            borderRadius: "12px", padding: "16px 24px", marginBottom: "28px",
-            display     : "flex", flexWrap: "wrap", gap: "20px", alignItems: "center",
-          }}>
-            <span style={{ color: "#64748b", fontSize: "0.8rem" }}>📌 الموقع المحدد:</span>
-            {[
-              { label: "خط العرض", value: userInfo.latitude?.toFixed(4) },
-              { label: "خط الطول", value: userInfo.longitude?.toFixed(4) },
-              { label: "المحافظة", value: userInfo.governorate ? (GOVERNORATES[userInfo.governorate]?.ar || userInfo.governorate) : "—" },
-            ].map(({ label, value }) => (
-              <div key={label} style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                <span style={{ color: "#64748b", fontSize: "0.78rem" }}>{label}:</span>
-                <span style={{ color: "#38bdf8", fontWeight: 600, fontSize: "0.85rem" }}>{value}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {userInfo && (
-          <div style={{
-            background  : "#1e293b", border: "1px solid #334155",
-            borderRadius: "16px", overflow: "hidden", marginBottom: "28px",
-          }}>
-            <div style={{
-              padding     : "14px 20px", borderBottom: "1px solid #334155",
-              display     : "flex", alignItems: "center", gap: "10px",
-            }}>
-              <span style={{ fontSize: "1.2rem" }}>🗺️</span>
-              <span style={{ color: "#38bdf8", fontWeight: 700 }}>خريطة الأبراج التفاعلية</span>
-              <span style={{ color: "#64748b", fontSize: "0.8rem", marginRight: "auto" }}>
-                🔴 خطورة عالية &nbsp; 🟡 خطورة متوسطة &nbsp; 🟢 مستقر &nbsp; 📍 موقعك
-              </span>
-            </div>
-            <div ref={mapRef} style={{ height: "420px", width: "100%" }} />
-          </div>
-        )}
-
-        {error && (
-          <div style={{
-            background  : "#450a0a", border: "1px solid #ef4444",
-            borderRadius: "12px", padding: "16px 24px", color: "#fca5a5",
-            marginBottom: "28px", display: "flex", gap: "10px", alignItems: "center",
-          }}>
-            <span style={{ fontSize: "1.4rem" }}>⚠️</span>
-            <div><strong>حدث خطأ:</strong> {error}</div>
-          </div>
-        )}
-
-        {result && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "24px" }}>
-
-            <Card title="التقييم العام للمحافظة" icon="🗺️" borderColor={stressColor}>
-              <DataRow label="المحافظة"       value={GOVERNORATES[result.governorate.name]?.ar || result.governorate.name} valueColor="#38bdf8" />
-              <DataRow label="نطاق البحث"     value={result.governorate.search_scope} />
-              <DataRow label="حالة الشبكة"    value={result.governorate.stress_label} valueColor={stressColor} />
-              <DataRow label="إجمالي الأبراج" value={result.governorate.total_towers.toLocaleString("ar-EG")} />
-              <DataRow
-                label="أبراج عالية الخطورة"
-                value={`${result.governorate.high_risk_towers.toLocaleString("ar-EG")} (${result.governorate.high_risk_pct}%)`}
-                valueColor="#f59e0b"
-              />
-              <div style={{ marginTop: "14px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                  <span style={{ color: "#94a3b8", fontSize: "0.82rem" }}>متوسط درجة الخطورة</span>
-                  <span style={{ color: stressColor, fontWeight: 700 }}>{result.governorate.avg_risk_score}</span>
-                </div>
-                <ProgressBar value={result.governorate.avg_risk_score} max={10} color={stressColor} />
-              </div>
-            </Card>
-
-            <Card title="أقرب برج اتصالات" icon="📶" borderColor="#818cf8">
-              <DataRow label="كود البرج"       value={result.nearest_tower.tower_id}           valueColor="#818cf8" />
-              <DataRow label="شركة التشغيل"    value={result.nearest_tower.network_operator}   valueColor="#e2e8f0" />
-              <DataRow label="المسافة عنك"     value={result.nearest_tower.distance_formatted}  valueColor="#38bdf8" />
-              <DataRow label="المسافة (أمتار)" value={`${result.nearest_tower.distance_meters.toLocaleString("ar-EG")} م`} />
-              <DataRow
-                label="مستوى الخطورة"
-                value={result.nearest_tower.risk_level}
-                valueColor={
-                  result.nearest_tower.risk_level === "High Risk"   ? "#ef4444" :
-                  result.nearest_tower.risk_level === "Medium Risk" ? "#f59e0b" : "#22c55e"
-                }
-              />
-              <div style={{ marginTop: "16px", textAlign: "center" }}>
-                <div style={{
-                  display: "inline-block", background: "#0f172a",
-                  borderRadius: "12px", padding: "12px 24px", border: "1px solid #818cf844",
-                }}>
-                  <div style={{ fontSize: "2rem" }}>📍</div>
-                  <div style={{ color: "#818cf8", fontWeight: 700, fontSize: "1.1rem" }}>
-                    {result.nearest_tower.distance_formatted}
+              {pickerCenter && (
+                <>
+                  <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "12px" }}>
+                    📌 اضغط على الخريطة أو اسحب العلامة لتحديد موقعك بدقة
+                  </p>
+                  <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid #334155", marginBottom: "18px" }}>
+                    <div ref={pickerMapRef} style={{ height: "380px", width: "100%" }} />
                   </div>
-                  <div style={{ color: "#64748b", fontSize: "0.75rem" }}>من موقعك الحالي</div>
+                  <button
+                    onClick={handleConfirmManualLocation}
+                    disabled={!pickedCoords || loading}
+                    style={{
+                      background  : loading ? "rgba(51, 65, 85, 0.8)" : "linear-gradient(135deg, #16a34a, #22c55e)",
+                      color       : "#fff", border: "none", borderRadius: "12px",
+                      padding     : "14px 36px", fontWeight: 700, fontSize: "1rem",
+                      cursor      : loading ? "not-allowed" : "pointer", width: "100%",
+                    }}
+                  >
+                    {loading ? "جارٍ التحليل..." : "✅ تأكيد الموقع وإصدار التقرير"}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
+          {userInfo && (
+            <div style={{
+              background  : "rgba(30, 41, 59, 0.7)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              border      : "1px solid rgba(51, 65, 85, 0.5)",
+              borderRadius: "12px", padding: "16px 24px", marginBottom: "28px",
+              display     : "flex", flexWrap: "wrap", gap: "20px", alignItems: "center",
+            }}>
+              <span style={{ color: "#94a3b8", fontSize: "0.8rem" }}>📌 الموقع المحدد:</span>
+              {[
+                { label: "خط العرض", value: userInfo.latitude?.toFixed(4) },
+                { label: "خط الطول", value: userInfo.longitude?.toFixed(4) },
+                { label: "المحافظة", value: userInfo.governorate ? (GOVERNORATES[userInfo.governorate]?.ar || userInfo.governorate) : "—" },
+              ].map(({ label, value }) => (
+                <div key={label} style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                  <span style={{ color: "#94a3b8", fontSize: "0.78rem" }}>{label}:</span>
+                  <span style={{ color: "#38bdf8", fontWeight: 600, fontSize: "0.85rem" }}>{value}</span>
                 </div>
+              ))}
+            </div>
+          )}
+
+          {userInfo && (
+            <div style={{
+              background  : "rgba(30, 41, 59, 0.7)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              border      : "1px solid rgba(51, 65, 85, 0.5)",
+              borderRadius: "16px", overflow: "hidden", marginBottom: "28px",
+            }}>
+              <div style={{
+                padding     : "14px 20px", borderBottom: "1px solid rgba(51, 65, 85, 0.5)",
+                display     : "flex", alignItems: "center", gap: "10px",
+              }}>
+                <span style={{ fontSize: "1.2rem" }}>🗺️</span>
+                <span style={{ color: "#38bdf8", fontWeight: 700 }}>خريطة الأبراج التفاعلية</span>
+                <span style={{ color: "#94a3b8", fontSize: "0.8rem", marginRight: "auto" }}>
+                  🔴 خطورة عالية &nbsp; 🟡 خطورة متوسطة &nbsp; 🟢 مستقر &nbsp; 📍 موقعك
+                </span>
               </div>
-            </Card>
+              <div ref={mapRef} style={{ height: "420px", width: "100%" }} />
+            </div>
+          )}
 
-            <Card title="تفاصيل البرج" icon="📡" borderColor="#38bdf8">
-              <DataRow label="نوع الشبكة"                value={result.tower_details.network_type} valueColor="#38bdf8" />
-              <DataRow label="عمر البرج"                 value={`${result.tower_details.age_years} سنة`} />
-              <DataRow
-                label="المسافة من الشبكة الكهربائية"
-                value={`${result.tower_details.distance_to_grid} كم`}
-                valueColor={result.tower_details.distance_to_grid > 10 ? "#f59e0b" : "#22c55e"}
-              />
-              <DataRow
-                label="الطاقة الاستيعابية"
-                value={`${result.tower_details.capacity.toLocaleString("ar-EG")} مستخدم`}
-                valueColor="#818cf8"
-              />
-            </Card>
+          {error && (
+            <div style={{
+              background  : "rgba(69, 10, 10, 0.85)", 
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              border      : "1px solid #ef4444",
+              borderRadius: "12px", padding: "16px 24px", color: "#fca5a5",
+              marginBottom: "28px", display: "flex", gap: "10px", alignItems: "center",
+            }}>
+              <span style={{ fontSize: "1.4rem" }}>⚠️</span>
+              <div><strong>حدث خطأ:</strong> {error}</div>
+            </div>
+          )}
 
-          </div>
-        )}
+          {result && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "24px" }}>
 
-        {result && (
-          <div style={{ textAlign: "center", marginTop: "32px", color: "#334155", fontSize: "0.75rem" }}>
-            آخر تحليل: {new Date().toLocaleString("ar-EG")}
-          </div>
-        )}
+              <Card title="التقييم العام للمحافظة" icon="🗺️" borderColor={stressColor}>
+                <DataRow label="المحافظة"       value={GOVERNORATES[result.governorate.name]?.ar || result.governorate.name} valueColor="#38bdf8" />
+                <DataRow label="نطاق البحث"     value={result.governorate.search_scope} />
+                <DataRow label="حالة الشبكة"    value={result.governorate.stress_label} valueColor={stressColor} />
+                <DataRow label="إجمالي الأبراج" value={result.governorate.total_towers.toLocaleString("ar-EG")} />
+                <DataRow
+                  label="أبراج عالية الخطورة"
+                  value={`${result.governorate.high_risk_towers.toLocaleString("ar-EG")} (${result.governorate.high_risk_pct}%)`}
+                  valueColor="#f59e0b"
+                />
+                <div style={{ marginTop: "14px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                    <span style={{ color: "#94a3b8", fontSize: "0.82rem" }}>متوسط درجة الخطورة</span>
+                    <span style={{ color: stressColor, fontWeight: 700 }}>{result.governorate.avg_risk_score}</span>
+                  </div>
+                  <ProgressBar value={result.governorate.avg_risk_score} max={10} color={stressColor} />
+                </div>
+              </Card>
 
-      </main>
+              <Card title="أقرب برج اتصالات" icon="📶" borderColor="#818cf8">
+                <DataRow label="كود البرج"       value={result.nearest_tower.tower_id}           valueColor="#818cf8" />
+                <DataRow label="شركة التشغيل"    value={result.nearest_tower.network_operator}   valueColor="#e2e8f0" />
+                <DataRow label="المسافة عنك"     value={result.nearest_tower.distance_formatted}  valueColor="#38bdf8" />
+                <DataRow label="المسافة (أمتار)" value={`${result.nearest_tower.distance_meters.toLocaleString("ar-EG")} م`} />
+                <DataRow
+                  label="مستوى الخطورة"
+                  value={result.nearest_tower.risk_level}
+                  valueColor={
+                    result.nearest_tower.risk_level === "High Risk"   ? "#ef4444" :
+                    result.nearest_tower.risk_level === "Medium Risk" ? "#f59e0b" : "#22c55e"
+                  }
+                />
+                <div style={{ marginTop: "16px", textAlign: "center" }}>
+                  <div style={{
+                    display: "inline-block", background: "rgba(15, 23, 42, 0.6)",
+                    borderRadius: "12px", padding: "12px 24px", border: "1px solid rgba(129, 140, 248, 0.3)",
+                  }}>
+                    <div style={{ fontSize: "2rem" }}>📍</div>
+                    <div style={{ color: "#818cf8", fontWeight: 700, fontSize: "1.1rem" }}>
+                      {result.nearest_tower.distance_formatted}
+                    </div>
+                    <div style={{ color: "#94a3b8", fontSize: "0.75rem" }}>من موقعك الحالي</div>
+                  </div>
+                </div>
+              </Card>
+
+              <Card title="تفاصيل البرج" icon="📡" borderColor="#38bdf8">
+                <DataRow label="نوع الشبكة"                value={result.tower_details.network_type} valueColor="#38bdf8" />
+                <DataRow label="عمر البرج"                 value={`${result.tower_details.age_years} سنة`} />
+                <DataRow
+                  label="المسافة من الشبكة الكهربائية"
+                  value={`${result.tower_details.distance_to_grid} كم`}
+                  valueColor={result.tower_details.distance_to_grid > 10 ? "#f59e0b" : "#22c55e"}
+                />
+                <DataRow
+                  label="الطاقة الاستيعابية"
+                  value={`${result.tower_details.capacity.toLocaleString("ar-EG")} مستخدم`}
+                  valueColor="#818cf8"
+                />
+              </Card>
+
+            </div>
+          )}
+
+          {result && (
+            <div style={{ textAlign: "center", marginTop: "32px", color: "#64748b", fontSize: "0.75rem" }}>
+              آخر تحليل: {new Date().toLocaleString("ar-EG")}
+            </div>
+          )}
+
+        </main>
+      </div>
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         * { box-sizing: border-box; }
-        body { margin: 0; }
-        .leaflet-container { font-family: 'Segoe UI', sans-serif; }
-        .leaflet-popup-content-wrapper { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; }
-        .leaflet-popup-tip { background: #1e293b; }
+        body { margin: 0; background-color: #0f172a; }
+        .leaflet-container { font-family: 'Segoe UI', sans-serif; border-radius: 0 0 16px 16px; }
+        .leaflet-popup-content-wrapper { background: rgba(30, 41, 59, 0.95); color: #e2e8f0; border: 1px solid rgba(51, 65, 85, 0.8); }
+        .leaflet-popup-tip { background: rgba(30, 41, 59, 0.95); }
         select option { background: #1e293b; color: #e2e8f0; }
       `}</style>
     </div>
